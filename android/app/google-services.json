@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "744310452212",
+    "firebase_url": "https://chatappreactnative-60992.firebaseio.com",
+    "project_id": "chatappreactnative-60992",
+    "storage_bucket": "chatappreactnative-60992.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:744310452212:android:1a9c7a68d60965f85493a1",
+        "android_client_info": {
+          "package_name": "com.firebase_chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "744310452212-jbjjn1nr8t15krfelffrqkqpod54vr0a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.firebase_chatapp",
+            "certificate_hash": "f1d7b19e36a94e24645d17565c96c07b859885a8"
+          }
+        },
+        {
+          "client_id": "744310452212-4atqbs6at4sicjku6hsckioo6r4uvju0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJg9K8OvJl4lU4WrefuJY9KVt9a1TNp5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "744310452212-4atqbs6at4sicjku6hsckioo6r4uvju0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
