@@ -6,7 +6,7 @@ const firebaseConfig = {
     authDomain: "chatappreactnative-60992.firebaseapp.com",
     databaseURL: "https://chatappreactnative-60992.firebaseio.com/",
     projectId: "chatappreactnative-60992",
-    storageBucket: "chatappreactnative-60992.appspot.com",
+    storageBucket: "gs://chatappreactnative-60992.appspot.com",
     messagingSenderId: "744310452212",
     appId: "1:744310452212:android:1a9c7a68d60965f85493a1"
   };

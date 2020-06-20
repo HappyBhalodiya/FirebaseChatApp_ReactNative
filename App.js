@@ -18,7 +18,7 @@ function App() {
     <Stack.Screen name="Dashboard" component={Dashboard} />
     <Stack.Screen name="AddUser" component={AddUser} />
     <Stack.Screen name="Login" component={Login} />
-    <Stack.Screen name="ChatScreen" component={ChatScreen} />
+    <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ headerShown: false }}/>
 
     </Stack.Navigator>
     </NavigationContainer>

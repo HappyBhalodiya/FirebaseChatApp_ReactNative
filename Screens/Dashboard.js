@@ -13,7 +13,9 @@ function Dashboard({ navigation }) {
   useEffect( () => {
     getUsers()
   },[])
-
+  /**
+   * get all user form Firebase Database
+   */
   const getUsers  = async() =>{
     userid = await AsyncStorage.getItem('userid');
     var data = firebase.database().ref('/users/');
@@ -30,13 +32,15 @@ function Dashboard({ navigation }) {
 
   }
   
-
+/**
+ * render all users
+ */
   const allusers = allUser.map((res, index) => {
-    console.log(res)
+   
     if (res.id != userid ) {
       return (
 
-        <TouchableOpacity style={styles.cardView} onPress={() => navigation.navigate('ChatScreen', { userclickid: res.id})}>
+        <TouchableOpacity style={styles.cardView} onPress={() => navigation.navigate('ChatScreen', { userclickid: res.id , userclickname :res.user})}>
 
         <View style={{ flexDirection: 'column', flex: 11 }}>
         <Text style={styles.username}>{res.user}</Text>
