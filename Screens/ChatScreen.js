@@ -3,7 +3,6 @@ import { View, Text, Alert, TouchableOpacity, StyleSheet, ImageBackground, Scrol
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-simple-toast";
 import firebase from '../database/firebaseDb';
-import storage from '../database/firebaseDb';
 import AsyncStorage from '@react-native-community/async-storage';
 import moment from 'moment';
 import { Header } from 'native-base';
@@ -12,6 +11,9 @@ import RNFetchBlob from 'react-native-fetch-blob'
 import FilePickerManager from 'react-native-file-picker';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
+import VideoPlayer from 'react-native-video-controls';
+
+
 let userid;
 function ChatScreen({ route, navigation }) {
   const [chatMessage, setChatMessage] = useState('')
@@ -49,15 +51,15 @@ function ChatScreen({ route, navigation }) {
 
     })
   }
- /**
-  * 
-  * @param {any} massages submit massage of File
-  * @param {any} type type of File
-  * @param {any} fileName name of File
-  * Store all Massages or file in Firebase Database
-  */
+  /**
+   * 
+   * @param {any} massages submit massage of File
+   * @param {any} type type of File
+   * @param {any} fileName name of File
+   * Store all Massages or file in Firebase Database
+   */
   const submitChatMessage = (massages, type, fileName) => {
-    
+
     let date = new Date();
     let formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
     console.log("formattedDate", formattedDate)
@@ -208,6 +210,40 @@ function ChatScreen({ route, navigation }) {
           </View>
         )
       }
+      else if (massage.massage_type == 'audio') {
+        return (
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+
+            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+              <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
+
+                <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
+              </View>
+            </TouchableOpacity>
+
+          </View>
+        )
+      }
+      else if (massage.massage_type == 'video') {
+        return (
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+              <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
+                <VideoPlayer
+                  source={{ uri: massage.massage }}
+                  disableFullscreen={true}
+                  disableBack={true}
+                  disableVolume={true}
+                  paused={true}
+                  disableSeekbar={false}
+                />
+              </View>
+            </TouchableOpacity>
+
+          </View>
+        )
+      }
       else {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
@@ -222,14 +258,26 @@ function ChatScreen({ route, navigation }) {
     }
     else if (route.params.userclickid == massage.senderId && (massage.senderId == userid || massage.receiverId == userid)) {
       if (massage.massage_type == 'image') {
-        <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+        return (<View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
           <View style={styles.sendfile} >
             <Image source={{ uri: massage.massage }}
               style={{ width: 250, height: 250 }} />
           </View>
         </View>
+        )
       }
       else if (massage.massage_type == 'application') {
+        return (
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+              <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
+                <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )
+      }
+      else if (massage.massage_type == 'audio') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
 
@@ -240,6 +288,24 @@ function ChatScreen({ route, navigation }) {
               </View>
             </TouchableOpacity>
 
+          </View>
+        )
+      }
+      else if (massage.massage_type == 'video') {
+        return (
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+              <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
+                <VideoPlayer
+                  source={{ uri: massage.massage }}
+                  disableFullscreen={true}
+                  disableBack={true}
+                  disableVolume={true}
+                  paused={true}
+                  disableSeekbar={false}
+                />
+              </View>
+            </TouchableOpacity>
           </View>
         )
       }
@@ -533,6 +599,8 @@ const styles = StyleSheet.create({
   normal: {
     flex: 1
   },
-
-
+  videoContainer: {
+    height: 250,
+    width: 180,
+  },
 })
