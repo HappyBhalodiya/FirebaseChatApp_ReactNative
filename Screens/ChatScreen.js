@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, Alert, TouchableOpacity, StyleSheet, ImageBackground, ScrollView, Image, TextInput } from 'react-native'
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, PermissionsAndroid, ImageBackground, ScrollView, Image, TextInput } from 'react-native'
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-simple-toast";
 import firebase from '../database/firebaseDb';
@@ -12,20 +12,28 @@ import FilePickerManager from 'react-native-file-picker';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import VideoPlayer from 'react-native-video-controls';
-
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import AwesomeAlert from 'react-native-awesome-alerts';
+import { ProgressBar, Colors } from 'react-native-paper';
 
 let userid;
 function ChatScreen({ route, navigation }) {
+  const audioRecorderPlayer = new AudioRecorderPlayer();
   const [chatMessage, setChatMessage] = useState('')
   const [allChats, setallChats] = useState([])
   const [showButtons, setShowButtons] = useState(false)
+  const [resultrecordedfile, setresultrecordedfile] = useState('');
+  const [recordSecs, setrecordSecs] = useState('');
+  const [showAlert, setshowAlert] = useState(false);
+  const [visible, setVisible] = useState(false)
+  const [selectImage, setSelectImage] = useState(undefined)
+  const [loader, setLoader] = useState(false)
+  const [progress , setProgress] = useState('')
   const scrollViewRef = useRef();
   const Blob = RNFetchBlob.polyfill.Blob;
   const fs = RNFetchBlob.fs;
   window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
   window.Blob = Blob;
-
-
 
   useEffect(() => {
     getAllMassages()
@@ -38,19 +46,36 @@ function ChatScreen({ route, navigation }) {
     firebase.database().ref('chat_data/').on('value', resp => {
       var massages = [];
       resp.forEach(child => {
+        console.log("child", child.key)
         massages.push({
           massage: child.val().massage,
           receiverId: child.val().receiverId,
           senderId: child.val().senderId,
           date: child.val().date,
           massage_type: child.val().massage_type,
-          fileName: child.val().fileName
+          fileName: child.val().fileName,
+          isRead: child.val().isRead,
+          key: child.key
         })
       })
       setallChats(massages)
+      checkreadfunction(massages)
+    })
 
+  }
+  const checkreadfunction = (massages) => {
+    // console.log("massages======================",massages)
+
+    massages.map(data => {
+      if (data.isRead == false) {
+        if (data.receiverId == userid && data.senderId == route.params.userclickid) {
+          console.log("true==================", data.receiverId, userid)
+          firebase.database().ref('chat_data/').child(data.key).update({ 'isRead': true })
+        }
+      }
     })
   }
+
   /**
    * 
    * @param {any} massages submit massage of File
@@ -70,15 +95,19 @@ function ChatScreen({ route, navigation }) {
       senderId: userid,
       date: formattedDate,
       massage_type: type,
-      fileName: fileName
+      fileName: fileName,
+      isRead: false
+
     });
     setChatMessage('')
+    setLoader(false)
   }
 
   /**
    * Image Picker
    */
   const launchImageLibrary = () => {
+
     let options = {
       storageOptions: {
         skipBackup: true,
@@ -127,6 +156,9 @@ function ChatScreen({ route, navigation }) {
    * Upload all file in firebase storage and download url 
    */
   const uploadFileInFirebase = async (fileUri, name, mime = type) => {
+    setshowAlert(false)
+    setLoader(true)
+    console.log("================================================", fileUri, name, mime)
     return new Promise((resolve, reject) => {
       let imgUri = fileUri;
       let uploadBlob = null;
@@ -139,6 +171,12 @@ function ChatScreen({ route, navigation }) {
         })
         .then(blob => {
           uploadBlob = blob;
+          var uploadTask =  imageRef.put(blob, { contentType: mime, name: name });;
+          uploadTask.on('state_changed', function(snapshot){
+            var progressFile = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progressFile + '% done');
+            setProgress(progressFile)
+          })
           return imageRef.put(blob, { contentType: mime, name: name });
         })
         .then(() => {
@@ -146,9 +184,10 @@ function ChatScreen({ route, navigation }) {
           return imageRef.getDownloadURL();
         })
         .then(url => {
-          console.log("url", url)
+          console.log("url===========================", url)
           submitChatMessage(url, mime.split('/')[0], name)
           resolve(url);
+
         })
         .catch(error => {
           reject(error)
@@ -180,31 +219,166 @@ function ChatScreen({ route, navigation }) {
         console.log(error)
       });
   }
+
+
+  /**
+   * Permission for Audio recording 
+   */
+  const audiopermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Permissions for write access',
+            message: 'Give permission to your storage to write a file',
+            buttonPositive: 'ok',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('You can use the storage');
+        } else {
+          console.log('permission denied');
+          return;
+        }
+      } catch (err) {
+        console.warn(err);
+        return;
+      }
+    }
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Permissions for write access',
+            message: 'Give permission to your storage to write a file',
+            buttonPositive: 'ok',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('You can use the camera');
+          onStartRecord();
+        } else {
+          console.log('permission denied');
+          return;
+        }
+      } catch (err) {
+        console.warn(err);
+        return;
+      }
+    }
+  }
+  /**
+   * Start Recording Audio after Permission 
+   */
+  const onStartRecord = async () => {
+    const path = Platform.select({
+      android: 'sdcard/Record' + Math.floor(Math.random() * 10000000000) + '.mp3',
+    });
+    console.log(path)
+    const result = await audioRecorderPlayer.startRecorder(path);
+    audioRecorderPlayer.addRecordBackListener((e) => {
+      return;
+    });
+    console.log(result);
+  };
+  /**
+   * Stop Recording Audio
+   */
+  const onStopRecord = async () => {
+    const result = await audioRecorderPlayer.stopRecorder();
+    audioRecorderPlayer.removeRecordBackListener();
+    setrecordSecs(0)
+    setshowAlert(true)
+    console.log("result om  stop", result, result.split('/')[4]);
+    setresultrecordedfile(result)
+
+  };
+
+/**
+ * 
+ * @param {any} filepath is path of Image
+ * show image in model
+ */
+  const showImg = (filepath) => {
+    setVisible(true)
+    setSelectImage(filepath)
+  }
   /**
    * Render All Massages from Firebase
    */
   const renderAllMassages = allChats.map((massage) => {
 
-    // let changeDateFormate = moment(massage.date).format('h:mm a')
+    let changeDateFormate = moment(massage.date).format('h:mm a')
     if (massage.receiverId == route.params.userclickid && massage.senderId == userid) {
+
       if (massage.massage_type == 'image') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+
             <View style={styles.sendfile} >
-              <Image source={{ uri: massage.massage }}
-                style={{ width: 250, height: 250 }} />
+              <TouchableOpacity onPress={() => showImg(massage.massage)}>
+                <Image source={{ uri: massage.massage }}
+                  style={{ width: 250, height: 250 }} />
+
+              </TouchableOpacity>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ alignSelf: 'flex-start', flexDirection: 'column' }}>
+                  <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                </View>
+                <View style={{ alignSelf: 'flex-end', flexDirection: 'column', marginLeft: 'auto' }}>
+                  <Icon name={"done-all"}
+                    size={18}
+                    color={massage.isRead == true ? "red" : "#46B6DB"}
+                  />
+                </View>
+              </View>
+
             </View>
+            <Modal
+              animationType="fade"
+              transparent={false}
+              visible={visible}
+              onRequestClose={() => {
+              }}>
+              <View >
+                <View >
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <TouchableOpacity onPress={() => setVisible(false)} >
+                      <Icon name="close" color="grey" size={30} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ elevation: 5, padding: 10 }}>
+                    <Image source={{ uri: selectImage }} style={styles.selectImage} />
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
           </View>
         )
       } else if (massage.massage_type == 'application') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
 
-            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
 
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
               </View>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ alignSelf: 'flex-start', flexDirection: 'column' }}>
+                  <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                </View>
+                <View style={{ alignSelf: 'flex-end', flexDirection: 'column', marginLeft: 'auto' }}>
+                  <Icon name={"done-all"}
+                    size={18}
+                    color={"#46B6DB"}
+                  />
+                </View>
+              </View>
+
             </TouchableOpacity>
 
           </View>
@@ -214,11 +388,24 @@ function ChatScreen({ route, navigation }) {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
 
-            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
 
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
+
               </View>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ alignSelf: 'flex-start', flexDirection: 'column' }}>
+                  <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                </View>
+                <View style={{ alignSelf: 'flex-end', flexDirection: 'column', marginLeft: 'auto' }}>
+                  <Icon name={"done-all"}
+                    size={18}
+                    color={"#46B6DB"}
+                  />
+                </View>
+              </View>
+
             </TouchableOpacity>
 
           </View>
@@ -239,6 +426,18 @@ function ChatScreen({ route, navigation }) {
                   disableSeekbar={false}
                 />
               </View>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ alignSelf: 'flex-start', flexDirection: 'column' }}>
+                  <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                </View>
+                <View style={{ alignSelf: 'flex-end', flexDirection: 'column', marginLeft: 'auto' }}>
+                  <Icon name={"done-all"}
+                    size={18}
+                    color={"#46B6DB"}
+                  />
+                </View>
+              </View>
+
             </TouchableOpacity>
 
           </View>
@@ -248,8 +447,20 @@ function ChatScreen({ route, navigation }) {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
             <View style={styles.sendermsg}>
-              <Text key={chatMessage} style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
-              {/* <Text key={chatMessage} style={styles.sendertime}>{changeDateFormate}</Text> */}
+              <Text style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ alignSelf: 'flex-start', flexDirection: 'column' }}>
+                  <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                </View>
+                <View style={{ alignSelf: 'flex-end', flexDirection: 'column', marginLeft: 'auto' }}>
+                  <Icon name={"done-all"}
+                    size={18}
+                    color={massage.isRead == true ? "green" : "red"}
+                  />
+                </View>
+              </View>
+
+
             </View>
 
           </View>
@@ -258,21 +469,46 @@ function ChatScreen({ route, navigation }) {
     }
     else if (route.params.userclickid == massage.senderId && (massage.senderId == userid || massage.receiverId == userid)) {
       if (massage.massage_type == 'image') {
-        return (<View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-          <View style={styles.sendfile} >
-            <Image source={{ uri: massage.massage }}
-              style={{ width: 250, height: 250 }} />
+        return (
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+            <View style={styles.sendfile} >
+              <TouchableOpacity onPress={() => showImg(massage.massage)}>
+
+                <Image source={{ uri: massage.massage }}
+                  style={{ width: 250, height: 250 }} />
+              </TouchableOpacity>
+              <Text style={styles.sendertime}>{changeDateFormate}</Text>
+            </View>
+            <Modal
+              animationType="fade"
+              transparent={false}
+              visible={visible}
+              onRequestClose={() => {
+              }}>
+              <View >
+                <View >
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <TouchableOpacity onPress={() => setVisible(false)} >
+                      <Icon name="close" color="grey" size={30} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ elevation: 5, padding: 10 }}>
+                    <Image source={{ uri: selectImage }} style={styles.selectImage} />
+                  </View>
+                </View>
+              </View>
+            </Modal>
           </View>
-        </View>
         )
       }
       else if (massage.massage_type == 'application') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
               </View>
+              <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
           </View>
         )
@@ -281,11 +517,12 @@ function ChatScreen({ route, navigation }) {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
 
-            <TouchableOpacity style={styles.sendfile} onPress={() => openallFiles(massage.massage, massage.fileName)}>
+            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
 
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
               </View>
+              <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
 
           </View>
@@ -304,7 +541,9 @@ function ChatScreen({ route, navigation }) {
                   paused={true}
                   disableSeekbar={false}
                 />
+
               </View>
+              <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
           </View>
         )
@@ -313,8 +552,8 @@ function ChatScreen({ route, navigation }) {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
             <View style={styles.receivermsg}>
-              <Text key={chatMessage} style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
-              {/* <Text key={chatMessage} style={styles.sendertime}>{changeDateFormate}</Text> */}
+              <Text style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
+              <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </View>
           </View>
         )
@@ -337,11 +576,16 @@ function ChatScreen({ route, navigation }) {
         <View style={{ flexDirection: 'column', flex: 10 }}>
           <Text style={styles.headertext}>{route.params.userclickname}</Text>
         </View>
+       
       </Header>
       <ImageBackground style={styles.imgBackground}
         resizeMode='cover'
         source={require('../assets/bg.jpg')}>
-
+       {
+         loader == true ? 
+         <ProgressBar progress={progress} style={{height:15}} color="blue" />
+         : null
+       } 
         <View style={{ flex: 6 }}>
           <ScrollView ref={scrollViewRef}
             onContentSizeChange={(contentWidth, contentHeight) => { scrollViewRef.current.scrollToEnd({ animated: true }) }}>
@@ -350,6 +594,7 @@ function ChatScreen({ route, navigation }) {
             </View>
           </ScrollView>
           <View style={styles.footer}>
+        
 
             {
               showButtons == true ?
@@ -385,8 +630,8 @@ function ChatScreen({ route, navigation }) {
                 </TouchableOpacity>
 
             }
+            
             <TouchableOpacity style={styles.inputContainer}>
-
               <TextInput
                 style={styles.inputs}
                 autoCorrect={false}
@@ -431,6 +676,27 @@ function ChatScreen({ route, navigation }) {
           </View>
           <View>
           </View>
+
+
+          <AwesomeAlert
+            show={showAlert}
+            showProgress={false}
+            title="Send Audio Sms"
+            message="I have a message for you!"
+            closeOnTouchOutside={true}
+            closeOnHardwareBackPress={false}
+            showCancelButton={true}
+            showConfirmButton={true}
+            cancelText="No, delete it "
+            confirmText="Yes, send it"
+            confirmButtonColor="#DD6B55"
+            onCancelPressed={() => {
+              setshowAlert(false)
+            }}
+            onConfirmPressed={() => {
+              uploadFileInFirebase(resultrecordedfile, resultrecordedfile.split('/')[4], 'audio')
+            }}
+          />
         </View>
       </ImageBackground>
 

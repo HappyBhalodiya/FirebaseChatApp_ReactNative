@@ -24,6 +24,7 @@ function AddUser({ navigation }) {
           username: username,
           password: password,
           email: email,
+          isOnline: false
 
         })
         navigation.navigate('Login')

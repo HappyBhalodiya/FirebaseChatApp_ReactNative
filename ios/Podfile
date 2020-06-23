@@ -79,6 +79,7 @@ target 'firebase_chatapp' do
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
+
   target 'firebase_chatappTests' do
     inherit! :complete
     # Pods for testing
