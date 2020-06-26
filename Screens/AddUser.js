@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, TextInput } from 'react-native'
+import { View, Text, ImageBackground, TouchableOpacity, StyleSheet, ScrollView, Image, TextInput } from 'react-native'
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-simple-toast";
 import firebase from '../database/firebaseDb';
@@ -24,7 +24,8 @@ function AddUser({ navigation }) {
           username: username,
           password: password,
           email: email,
-          isOnline: false
+          isOnline: false,
+          profilePic: ''
 
         })
         navigation.navigate('Login')
@@ -34,84 +35,90 @@ function AddUser({ navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View
-        style={{
-          flexDirection: "column",
-          flex: 4
-        }}
-      />
-      <View
-        style={{
-          flexDirection: "column",
-          flex: 7,
-          justifyContent: "center",
-          alignItems: "center"
-        }}
-      >
+      <ImageBackground style={styles.imgBackground}
+        resizeMode='cover'
+        source={require('../assets/bgg.png')}>
+        <View
+          style={{
+            flexDirection: "column",
+            flex: 4
+          }}
+        />
+        <View
+          style={{
+            flexDirection: "column",
+            flex: 7,
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+        >
+          <View>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 20 }}>Sign up</Text>
+          </View>
 
+          <View style={styles.inputContainer}>
+            <Icon name={"face"} size={20} color="#606060" style={{ margin: 10 }} />
+            <TextInput
+              style={styles.inputs}
+              placeholder="username"
+              underlineColorAndroid="transparent"
+              onChangeText={text => setUsername(text)}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Icon name={"email"} size={20} color="#606060" style={{ margin: 10 }} />
 
-        <View style={styles.inputContainer}>
-          <Icon name={"lock-outline"} size={20} color="#606060" style={{ margin: 10 }} />
-          <TextInput
-            style={styles.inputs}
-            placeholder="username"
-            underlineColorAndroid="transparent"
-            onChangeText={text => setUsername(text)}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Icon name={"email"} size={20} color="#606060" style={{ margin: 10 }} />
+            <TextInput
+              style={styles.inputs}
+              placeholder="Email"
+              keyboardType="email-address"
+              underlineColorAndroid="transparent"
+              onChangeText={text => setEmail(text)}
+            />
+          </View>
 
-          <TextInput
-            style={styles.inputs}
-            placeholder="Email"
-            keyboardType="email-address"
-            underlineColorAndroid="transparent"
-            onChangeText={text => setEmail(text)}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Icon name={"lock-outline"} size={20} color="#606060" style={{ margin: 10 }} />
+            <TextInput
+              style={styles.inputs}
+              placeholder="Password"
+              secureTextEntry={true}
+              underlineColorAndroid="transparent"
+              onChangeText={text => setPassword(text)}
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Icon name={"lock-outline"} size={20} color="#606060" style={{ margin: 10 }} />
-          <TextInput
-            style={styles.inputs}
-            placeholder="Password"
-            secureTextEntry={true}
-            underlineColorAndroid="transparent"
-            onChangeText={text => setPassword(text)}
-          />
-        </View>
+          <View style={styles.inputContainer1}>
+            <TouchableOpacity
+              style={[styles.buttonContainer, styles.loginButton]}
+              onPress={() => AddData()}
+            >
+              <Text style={styles.signUpText}>Register</Text>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.inputContainer1}>
-          <TouchableOpacity
-            style={[styles.buttonContainer, styles.loginButton]}
-            onPress={() => AddData()}
-          >
-            <Text style={styles.signUpText}>Register</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.inputContainer1}>
+            <Text
+              style={{ fontWeight: "bold", fontSize: 15, color: "silver" }}
+            >
 
-        <View style={styles.inputContainer1}>
-          <Text
-            style={{ fontWeight: "bold", fontSize: 15, color: "silver" }}
-          >
-
-            Already have an account.
+              Already have an account.
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-              Log in
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={{ fontSize: 15, fontWeight: "bold" }}>
+                Log in
           </Text>
-          </TouchableOpacity>
-        </View>
+            </TouchableOpacity>
+          </View>
 
-      </View>
-      <View
-        style={{
-          flexDirection: "column",
-          flex: 4
-        }}
-      />
+        </View>
+        <View
+          style={{
+            flexDirection: "column",
+            flex: 4
+          }}
+        />
+      </ImageBackground>
     </View>
 
   );
@@ -164,10 +171,11 @@ const styles = StyleSheet.create({
 
   },
   loginButton: {
-    backgroundColor: "#38887A"
+    backgroundColor: "#372e5f",
+    marginTop:50
   },
   signUpText: {
-    color: "white"
+    color: "#fff"
   },
   text: {
     fontSize: 20,
@@ -199,5 +207,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 15,
     bottom: 5
+  },
+  imgBackground: {
+    width: '100%',
+    height: '100%',
+    flex: 1,
   },
 });

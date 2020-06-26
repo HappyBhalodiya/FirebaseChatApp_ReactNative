@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { View, TouchableOpacity, Text, StyleSheet, ScrollView, TextInput } from 'react-native'
-import { useFocusEffect } from '@react-navigation/native';
-import Toast from "react-native-simple-toast";
+import { View, TouchableOpacity, Text, StyleSheet, ImageBackground,ScrollView, TextInput } from 'react-native'
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from '@react-native-community/async-storage';
 import firebase from '../database/firebaseDb';
+import { AuthContext } from '../components/context';
+
+
+
 function Login({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('')
+const { signIn } = React.useContext(AuthContext);
+
     /**
      * Login user
      */
@@ -19,6 +23,11 @@ function Login({ navigation }) {
                 .then(async (res) => {
                     console.log("Login Done", res);
                     await AsyncStorage.setItem('userid', res.user.uid)
+                   const foundUser= {
+                        user: res.user.email,
+                        token: res.user.uid
+                    }
+                    signIn(foundUser);
                     setEmail('')
                     setPassword('')
                     navigation.navigate('Dashboard')
@@ -26,12 +35,15 @@ function Login({ navigation }) {
         } catch (error) {
             console.log(error.toString(error));
         }
+
+        
     }
 
     return (
-
-
         <View style={{ flex: 1 }}>
+             <ImageBackground style={styles.imgBackground}
+        resizeMode='cover'
+        source={require('../assets/bgg.png')}>
             <View
                 style={{
                     flexDirection: "column",
@@ -46,7 +58,9 @@ function Login({ navigation }) {
                     alignItems: "center"
                 }}
             >
-
+                <View>
+                    <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 20 }}>Login To Acoount</Text>
+                </View>
                 <View style={styles.inputContainer}>
                     <Icon
                         name={"email-outline"}
@@ -91,11 +105,11 @@ function Login({ navigation }) {
                     <Text
                         style={{ fontWeight: "bold", fontSize: 15, color: "silver" }}
                     >
-                        New hear ?
+                        New hear?
             </Text>
                     <TouchableOpacity onPress={() => navigation.navigate('AddUser')}>
                         <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                            Create an Account
+                             Create an Account
             </Text>
                     </TouchableOpacity>
                 </View>
@@ -106,7 +120,7 @@ function Login({ navigation }) {
                     flex: 4
                 }}
             />
-
+</ImageBackground>
         </View>
     );
 }
@@ -118,8 +132,6 @@ const styles = StyleSheet.create({
     container: {
 
         flex: 1,
-        // alignItems: "center",
-        // justifyContent: "center",
         backgroundColor: "#000"
     },
 
@@ -162,19 +174,21 @@ const styles = StyleSheet.create({
 
     },
     loginButton: {
-        backgroundColor: "#38887A"
-    },
-    signupButton: {
         backgroundColor: "#372e5f",
-        marginLeft: 10
+        marginTop:50
     },
     signUpText: {
-        color: "white"
+        color: "#fff"
     },
     text: {
         fontSize: 20,
         color: "white",
         justifyContent: "center",
         marginTop: 40
-    }
+    },
+    imgBackground: {
+        width: '100%',
+        height: '100%',
+        flex: 1,
+      },
 });
