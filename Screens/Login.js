@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react'
-import { View, TouchableOpacity, Text, StyleSheet, ImageBackground,ScrollView, TextInput } from 'react-native'
+import {
+    View,
+    TouchableOpacity,
+    Text,
+    StyleSheet,
+    StatusBar,
+    ScrollView,
+    TextInput
+} from 'react-native'
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from '@react-native-community/async-storage';
 import firebase from '../database/firebaseDb';
 import { AuthContext } from '../components/context';
+import LinearGradient from 'react-native-linear-gradient';
+import * as Animatable from 'react-native-animatable';
 
 
 
 function Login({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('')
-const { signIn } = React.useContext(AuthContext);
+    const { signIn } = React.useContext(AuthContext);
 
     /**
      * Login user
@@ -23,7 +33,7 @@ const { signIn } = React.useContext(AuthContext);
                 .then(async (res) => {
                     console.log("Login Done", res);
                     await AsyncStorage.setItem('userid', res.user.uid)
-                   const foundUser= {
+                    const foundUser = {
                         user: res.user.email,
                         token: res.user.uid
                     }
@@ -36,92 +46,90 @@ const { signIn } = React.useContext(AuthContext);
             console.log(error.toString(error));
         }
 
-        
+
     }
 
     return (
-        <View style={{ flex: 1 }}>
-             <ImageBackground style={styles.imgBackground}
-        resizeMode='cover'
-        source={require('../assets/bgg.png')}>
-            <View
-                style={{
-                    flexDirection: "column",
-                    flex: 4
-                }}
-            />
-            <View
-                style={{
-                    flexDirection: "column",
-                    flex: 7,
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}
-            >
-                <View>
-                    <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 20 }}>Login To Acoount</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Icon
-                        name={"email-outline"}
-                        size={20}
-                        color="#606060"
-                        style={{ margin: 10 }}
-                    />
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Email"
-                        keyboardType="email-address"
-                        underlineColorAndroid="transparent"
-                        onChangeText={text => setEmail(text)}
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <Icon
-                        name={"lock-outline"}
-                        size={20}
-                        color="#606060"
-                        style={{ margin: 10 }}
-                    />
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Password"
-                        secureTextEntry={true}
-                        underlineColorAndroid="transparent"
-                        onChangeText={text => setPassword(text)}
-                    />
-                </View>
-
-                <View style={styles.inputContainer1}>
-                    <TouchableOpacity
-                        style={[styles.buttonContainer, styles.loginButton]}
-                        onPress={() => login()}
-                    >
-                        <Text style={styles.signUpText}>Log in</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.inputContainer1}>
-                    <Text
-                        style={{ fontWeight: "bold", fontSize: 15, color: "silver" }}
-                    >
-                        New hear?
-            </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('AddUser')}>
-                        <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                             Create an Account
-            </Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-            <View
-                style={{
-                    flexDirection: "column",
-                    flex: 4
-                }}
-            />
-</ImageBackground>
+        <View style={styles.container}>
+          <StatusBar backgroundColor='#009387' barStyle="light-content"/>
+        <View style={styles.header}>
+            <Text style={styles.text_header}>Welcome!</Text>
         </View>
+        <Animatable.View 
+            animation="fadeInUpBig"
+            style={styles.footer}
+        >
+            <Text style={styles.text_footer}>Username</Text>
+            <View style={styles.action}>
+                <Icon 
+                    name="email-outline"
+                    color="#05375a"
+                    size={20}
+                />
+               <TextInput
+                style={styles.textInput}
+                placeholder="Email"
+                keyboardType="email-address"
+                underlineColorAndroid="transparent"
+                onChangeText={text => setEmail(text)}
+            />
+    
+            </View>
+
+            
+
+            <Text style={[styles.text_footer, {
+                
+                marginTop: 35
+            }]}>Password</Text>
+            <View style={styles.action}>
+                <Icon 
+                    name="lock"
+                    color="#05375a"
+                    size={20}
+                />
+                <TextInput
+                style={styles.textInput}
+                placeholder="Password"
+                secureTextEntry={true}
+                underlineColorAndroid="transparent"
+                onChangeText={text => setPassword(text)}
+            />
+
+            </View>
+            
+            
+
+            <View style={styles.button}>
+                <TouchableOpacity
+                    style={styles.signIn}
+                    onPress={() => login()}
+                >
+                <LinearGradient
+                    colors={['#08d4c4', '#01ab9d']}
+                    style={styles.signIn}
+                >
+                    <Text style={[styles.textSign, {
+                        color:'#fff'
+                    }]}>Sign In</Text>
+                </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('AddUser')}
+                    style={[styles.signIn, {
+                        borderColor: '#009387',
+                        borderWidth: 1,
+                        marginTop: 15
+                    }]}
+                >
+                    <Text style={[styles.textSign, {
+                        color: '#009387'
+                    }]}>Sign Up</Text>
+                </TouchableOpacity>
+            </View>
+        </Animatable.View>
+      </View>
     );
 }
 
@@ -130,65 +138,69 @@ export default Login;
 
 const styles = StyleSheet.create({
     container: {
-
-        flex: 1,
-        backgroundColor: "#000"
-    },
-
-    inputContainer: {
-        borderBottomColor: "#F5FCFF",
-        backgroundColor: "#e7e7e7",
-
-        width: 280,
-        height: 45,
-        marginBottom: 20,
-        flexDirection: 'row',
-    },
-    inputContainer1: {
-        width: 250,
-        height: 45,
-        marginBottom: 20,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center"
-    },
-    inputs: {
-        height: 45,
-        marginLeft: 16,
-        borderBottomColor: "#FFFFFF",
-        flex: 1
-    },
-    inputIcon: {
-        width: 30,
-        height: 30,
-        marginLeft: 15,
-        justifyContent: "center"
-    },
-    buttonContainer: {
-        height: 45,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        marginBottom: 20,
-        width: 150,
-
-    },
-    loginButton: {
-        backgroundColor: "#372e5f",
-        marginTop:50
-    },
-    signUpText: {
-        color: "#fff"
-    },
-    text: {
-        fontSize: 20,
-        color: "white",
-        justifyContent: "center",
-        marginTop: 40
-    },
-    imgBackground: {
-        width: '100%',
-        height: '100%',
-        flex: 1,
+        flex: 1, 
+        backgroundColor: '#009387'
       },
+      header: {
+          flex: 1,
+          justifyContent: 'flex-end',
+          paddingHorizontal: 20,
+          paddingBottom: 50
+      },
+      footer: {
+          flex: 3,
+          backgroundColor: '#fff',
+          borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
+          paddingHorizontal: 20,
+          paddingVertical: 30
+      },
+      text_header: {
+          color: '#fff',
+          fontWeight: 'bold',
+          fontSize: 30
+      },
+      text_footer: {
+          color: '#05375a',
+          fontSize: 18
+      },
+      action: {
+          flexDirection: 'row',
+          marginTop: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: '#f2f2f2',
+          paddingBottom: 5
+      },
+      actionError: {
+          flexDirection: 'row',
+          marginTop: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: '#FF0000',
+          paddingBottom: 5
+      },
+      textInput: {
+          flex: 1,
+          marginTop: Platform.OS === 'ios' ? 0 : -12,
+          paddingLeft: 10,
+          color: '#05375a',
+      },
+      errorMsg: {
+          color: '#FF0000',
+          fontSize: 14,
+      },
+      button: {
+          alignItems: 'center',
+          marginTop: 50
+      },
+      signIn: {
+          width: '100%',
+          height: 50,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 10
+      },
+      textSign: {
+          fontSize: 18,
+          fontWeight: 'bold'
+      }
 });
