@@ -7,12 +7,12 @@ import {
     StatusBar,
     ScrollView,
     TextInput
+
 } from 'react-native'
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from '@react-native-community/async-storage';
 import firebase from '../database/firebaseDb';
 import { AuthContext } from '../components/context';
-import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
 
@@ -59,6 +59,7 @@ function Login({ navigation }) {
             animation="fadeInUpBig"
             style={styles.footer}
         >
+             <ScrollView>
             <Text style={styles.text_footer}>Username</Text>
             <View style={styles.action}>
                 <Icon 
@@ -102,17 +103,16 @@ function Login({ navigation }) {
 
             <View style={styles.button}>
                 <TouchableOpacity
-                    style={styles.signIn}
+                    style={[styles.signIn,{
+                        backgroundColor:'#56C9BA'
+                    }]}
                     onPress={() => login()}
                 >
-                <LinearGradient
-                    colors={['#08d4c4', '#01ab9d']}
-                    style={styles.signIn}
-                >
+             
                     <Text style={[styles.textSign, {
                         color:'#fff'
                     }]}>Sign In</Text>
-                </LinearGradient>
+                
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -128,6 +128,7 @@ function Login({ navigation }) {
                     }]}>Sign Up</Text>
                 </TouchableOpacity>
             </View>
+            </ScrollView>
         </Animatable.View>
       </View>
     );

@@ -95,7 +95,7 @@ export function DrawerContent(props) {
             <TouchableOpacity
           onPress={() =>  props.navigation.navigate('Profile')}
           style={{ flexDirection: 'column', flex: 1 ,right:0 }}>
-          <Icon name={"settings"} size={20} color="#fff" style={{ marginLeft: 60,margin:10}} />
+          <Icon name={"settings"} size={20} color="#000" style={{ marginLeft: 60,margin:10}} />
         </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -107,12 +107,12 @@ export function DrawerContent(props) {
     <View style={{ flex: 1 }}>
 
       <View style={styles.drawerContent}>
-        <View style={{ flexDirection: 'column', flex: 3, backgroundColor: '#372e5f' }}>
+        <View style={{ flexDirection: 'column', flex: 3, backgroundColor: '#3E9487' }}>
           <DrawerItem
             icon={() => (
               <Icon
                 name="chat-bubble"
-                color={'white'}
+                color={'#fff'}
                 size={30}
               />
             )}
@@ -125,13 +125,13 @@ export function DrawerContent(props) {
             onPress={() => { props.navigation.navigate('Dashboard') }}
           />
         </View>
-        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#3c3267' }}>
+        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#fff' }}>
           <View style={styles.serchviewHeader}>
 
             <View style={styles.searchView}>
               <TextInput
                 placeholder='Search...'
-                placeholderTextColor="#fff"
+                placeholderTextColor="#3E9487"
                 onChangeText={(text) => handleSearch(text)}
                 style={{ flex: 1, color: '#fff' }}
               />
@@ -139,7 +139,7 @@ export function DrawerContent(props) {
             </View>
 
           </View>
-          <Text style={{ color: '#8E9196' }}>
+          <Text style={{ color: '#3E9487' }}>
             Direct Massage
                     </Text>
           {allusersrender}
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     textAlign: 'center',
     marginTop: 5,
-    color: '#8E9196'
+    color: '#000'
   },
   headertext: {
     fontSize: 20,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     width:'100%',
     height:HEIGHT,
-    backgroundColor:"#3c3267",
+    backgroundColor:"#fff",
     flexDirection:'row'
   },
 

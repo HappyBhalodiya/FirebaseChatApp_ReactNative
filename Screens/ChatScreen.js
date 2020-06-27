@@ -509,7 +509,7 @@ function ChatScreen({ route, navigation }) {
 
    return (
      <View style={styles.container}>
-       <Header style={{ backgroundColor: '#372e5f', height: 55, padding: 5 }}>
+       <Header style={{ backgroundColor: '#3E9487', height: 55, padding: 5 }}>
        <NavigationDrawerStructure navigationProps={navigation} />
        
          <View style={{ flexDirection: 'column', flex: 10 }}>
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btnSend: {
-    backgroundColor: "#372e5f",
+    backgroundColor: "#3E9487",
     width: 40,
     height: 40,
     borderRadius: 360,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     margin: 5,
-    backgroundColor: "#372e5f"
+    backgroundColor: "#3E9487"
   },
   pdfText: {
     marginRight: 50,

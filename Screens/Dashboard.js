@@ -111,7 +111,7 @@ function Dashboard({ route, navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <Header style={{ backgroundColor: '#372e5f', height: 50, padding: 5 }}>
+      <Header style={{ backgroundColor: '#3E9487', height: 50, padding: 5 }}>
         <NavigationDrawerStructure navigationProps={navigation} />
         <View style={{ flexDirection: 'column', flex: 10 }}>
           <Text style={styles.headertext}>Dashboard</Text>

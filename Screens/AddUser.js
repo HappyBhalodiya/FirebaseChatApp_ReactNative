@@ -12,7 +12,6 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import firebase from '../database/firebaseDb';
 import * as Animatable from 'react-native-animatable';
-import LinearGradient from 'react-native-linear-gradient';
 
 
 function AddUser({ navigation }) {
@@ -110,17 +109,16 @@ function AddUser({ navigation }) {
 
           <View style={styles.button}>
             <TouchableOpacity
-              style={styles.signIn}
+              style={[styles.signIn,{
+                backgroundColor:'#56C9BA'
+              }]}
               onPress={() => AddData()}
             >
-              <LinearGradient
-                colors={['#08d4c4', '#01ab9d']}
-                style={styles.signIn}
-              >
+              
                 <Text style={[styles.textSign, {
                   color: '#fff'
                 }]}>Sign Up</Text>
-              </LinearGradient>
+              
             </TouchableOpacity>
 
             <TouchableOpacity

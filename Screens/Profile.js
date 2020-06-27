@@ -6,6 +6,9 @@ import { Container, Header, Content, Card, CardItem, Body } from 'native-base';
 import ImagePicker from 'react-native-image-picker';
 import firebase from '../database/firebaseDb';
 import RNFetchBlob from 'react-native-fetch-blob'
+import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { AuthContext } from '../components/context';
+
 const NavigationDrawerStructure = (props) => {
 	const toggleDrawer = () => {
 		props.navigationProps.toggleDrawer();
@@ -31,6 +34,7 @@ function Profile({ navigation }) {
 	const [ online , setOnline] = useState('')
 	const [ profile, setProfilePic] = useState('')
 	const [name, setname] = useState('')
+	const { signOut } = React.useContext(AuthContext);
 	const Blob = RNFetchBlob.polyfill.Blob;
 	const fs = RNFetchBlob.fs;
 	window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
@@ -147,12 +151,22 @@ function Profile({ navigation }) {
 
 	return (
 		<View style={{ flex: 1 }}>
-			<Header style={{ backgroundColor: '#372e5f', height: 50, padding: 5 }}>
+			<Header style={{ backgroundColor: '#3E9487', height: 50, padding: 5 }}>
 			<NavigationDrawerStructure navigationProps={navigation} />
 				<View style={{ flexDirection: 'column', flex: 10 }}>
 					<Text style={styles.headertext}>Profile</Text>
 
 				</View>
+				<TouchableOpacity style={{ flexDirection: 'column', flex: 2 }}
+				onPress={() => signOut()}>
+				
+				<Icons 
+                        name="exit-to-app" 
+                        color='#fff'
+						size={30}
+						style={{marginTop:8}}
+                        />
+				</TouchableOpacity>
 			</Header>
 			<View
 				style={{
@@ -168,7 +182,7 @@ function Profile({ navigation }) {
 						<Icon
 							name="person"
 							size={30}
-							color="#372e5f"
+							color="#3E9487"
 							style={{ margin: 5 }}
 						/>
 					</View>
@@ -205,7 +219,7 @@ function Profile({ navigation }) {
 										<Icon
 											name="edit"
 											size={20}
-											color="#372e5f"
+											color="#3E9487"
 											style={{ margin: 5 }}
 											onPress={() => setVisible(true)}
 										/>
@@ -221,7 +235,7 @@ function Profile({ navigation }) {
 						<Icon
 							name="email"
 							size={30}
-							color="#372e5f"
+							color="#3E9487"
 							style={{ margin: 5 }}
 						/>
 					</View>
@@ -295,7 +309,7 @@ const styles = StyleSheet.create({
 		color: '#000'
 	},
 	inputContainer: {
-		borderBottomColor: "#368377",
+		borderBottomColor: "#3E9487",
 		width: 280,
 		height: 45,
 		marginBottom: 20,
@@ -305,12 +319,12 @@ const styles = StyleSheet.create({
 		height: 45,
 		borderBottomWidth: 3,
 		marginLeft: 16,
-		borderBottomColor: "#368377",
+		borderBottomColor: "#3E9487",
 		flex: 1
 	},
 	choosephoto: {
 		justifyContent: 'center',
-		backgroundColor: '#372e5f',
+		backgroundColor: '#3E9487',
 		borderRadius: 50,
 		height: 50,
 		width: 50,
@@ -319,7 +333,7 @@ const styles = StyleSheet.create({
 		bottom: -10
 	},
 	dialogbuttontext: {
-		color: '#372e5f',
+		color: '#3E9487',
 		fontSize: 18
 	}
 });
