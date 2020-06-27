@@ -8,7 +8,7 @@ import firebase from '../database/firebaseDb';
 import RNFetchBlob from 'react-native-fetch-blob'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../components/context';
-
+import { EventRegister } from 'react-native-event-listeners'
 const NavigationDrawerStructure = (props) => {
 	const toggleDrawer = () => {
 		props.navigationProps.toggleDrawer();
@@ -25,9 +25,7 @@ const NavigationDrawerStructure = (props) => {
 	);
   }
 function Profile({ navigation }) {
-	const useMountEffect = (fun) => useEffect(fun, [])
 	const [profilePhoto, setProfilePhoto] = useState(null)
-	const [profilePhotoName, setProfilePhotoName] = useState('')
 	const [visible, setVisible] = useState(false)
 	const [username, setUsername] = useState('')
 	const [email , setEmail] = useState('')
@@ -56,14 +54,15 @@ function Profile({ navigation }) {
 	const getCurrentUserDetails = async () => {
 		userid = await AsyncStorage.getItem('userid');
 		var data = firebase.database().ref('/users/'+ userid);
+		var allData = firebase.database().ref('/users/');
+		allData.once('value').then(snapshot => {
+			EventRegister.emit('updatedData', snapshot)
+		})
 		data.once('value').then(snapshot => {
-			console.log("=================================",snapshot)
 			setUsername(snapshot.val().username)
 			setEmail(snapshot.val().email)
 			setOnline(snapshot.val().isOnline)
 			setProfilePic(snapshot.val().profilePic)
-
-		
 		})
 	}
 	const profilepicFun = () => {
@@ -104,9 +103,11 @@ function Profile({ navigation }) {
 	};
 	const submitProfileImage = (url) => {
 		firebase.database().ref('users/').child(userid).update({ 'profilePic': url })
+		getCurrentUserDetails()
 	}
 	const updateUsername = () => {
 		firebase.database().ref('users/').child(userid).update({ 'username': name })
+		getCurrentUserDetails()
 		setVisible(false)
 	}
 	  /**

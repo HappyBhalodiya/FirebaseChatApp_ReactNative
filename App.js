@@ -11,7 +11,7 @@ import Profile from "./Screens/Profile"
 import AsyncStorage from '@react-native-community/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { DrawerContent } from './Screens/DrawerContent';
-
+import firebase from './database/firebaseDb';
 import RootStackScreen from './Screens/RootStackScreen';
 import { AuthContext } from './components/context';
 
@@ -76,6 +76,11 @@ const App = () => {
 		signOut: async () => {
 			try {
 				await AsyncStorage.removeItem('userToken');
+
+				let userid = await AsyncStorage.getItem('userid');
+				var presenceRef = firebase.database().ref("users/").child(userid);
+				// Write a string when this client loses connection
+				presenceRef.update({ 'isOnline': false });
 			} catch (e) {
 				console.log(e);
 			}
