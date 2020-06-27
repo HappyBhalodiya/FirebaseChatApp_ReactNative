@@ -49,7 +49,7 @@ function ChatScreen({ route, navigation }) {
   window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
   window.Blob = Blob;
 
-  useEffect(() => {
+  useEffect(() => {console.log(route.params.userclickid,route.params.userclickname)
     getAllMassages()
   }, [])
 

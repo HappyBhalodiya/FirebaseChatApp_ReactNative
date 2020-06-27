@@ -7,7 +7,9 @@ import {
   ScrollView,
   Image,
   TextInput,
-  StatusBar
+  StatusBar,
+  Alert,
+  ActivityIndicator
 } from 'react-native'
 import Icon from "react-native-vector-icons/MaterialIcons";
 import firebase from '../database/firebaseDb';
@@ -18,14 +20,20 @@ function AddUser({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  let dbRef = firebase.firestore().collection('users');
-
+  const [loader, setLoader] = useState(false)
+ 
   /**
    * Add Users in Firebase 
    */
   const AddData = () => {
     console.log(username, email, password)
-
+    if(!username || !email || !password){
+      Alert.alert('Wrong Input!', 'Username , Email or password field cannot be empty.', [
+        {text: 'Okay'}
+      ]);
+    }
+    else{
+      setLoader(true)
     firebase.auth().createUserWithEmailAndPassword(email, password)
       .then((res) => {
         console.log("Response before Database:", res)
@@ -39,8 +47,9 @@ function AddUser({ navigation }) {
 
         })
         navigation.navigate('Login')
+        setLoader(false)
       })
-
+    }
   }
 
   return (
@@ -109,16 +118,22 @@ function AddUser({ navigation }) {
 
           <View style={styles.button}>
             <TouchableOpacity
-              style={[styles.signIn,{
-                backgroundColor:'#56C9BA'
+              style={[styles.signIn, {
+                backgroundColor: '#56C9BA'
               }]}
               onPress={() => AddData()}
             >
-              
-                <Text style={[styles.textSign, {
-                  color: '#fff'
-                }]}>Sign Up</Text>
-              
+              {
+                loader == true ?
+                  <View>
+                    <ActivityIndicator size="large" color="#fff" />
+                  </View>
+                  :
+                  <Text style={[styles.textSign, {
+                    color: '#fff'
+                  }]}>Sign Up</Text>
+              }
+
             </TouchableOpacity>
 
             <TouchableOpacity
