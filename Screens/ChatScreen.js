@@ -44,6 +44,8 @@ function ChatScreen({ route, navigation }) {
   const [loader, setLoader] = useState(false)
   const [progress, setProgress] = useState('')
   const scrollViewRef = useRef();
+  const [currentUserProfile, setcurrentUserProfile] = useState('')
+
   const Blob = RNFetchBlob.polyfill.Blob;
   const fs = RNFetchBlob.fs;
   window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
@@ -109,13 +111,12 @@ function ChatScreen({ route, navigation }) {
    */
   const getAllMassages = async () => {
     userid = await AsyncStorage.getItem('userid');
-
-    userid = await AsyncStorage.getItem('userid');
-    var data = firebase.database().ref('/users/');
-    data.child(userid).update({ 'isOnline': true })
-    var presenceRef = firebase.database().ref("users/").child(userid);
-    // Write a string when this client loses connection
-    presenceRef.onDisconnect().update({ 'isOnline': false });
+    var currentUserData = firebase.database().ref('/users/' + userid);
+        currentUserData.once('value').then(snapshot => {
+            setcurrentUserProfile(snapshot.val().profilePic)
+        })
+   
+  
 
     firebase.database().ref('chat_data/').on('value', resp => {
       var massages = [];
@@ -339,7 +340,7 @@ function ChatScreen({ route, navigation }) {
                 </View>
               </View>
             </Modal>
-
+            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
           </View>
         )
       } else if (massage.massage_type == 'application') {
@@ -351,7 +352,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-
+            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -365,7 +366,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-
+            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -386,7 +387,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-
+            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -397,11 +398,9 @@ function ChatScreen({ route, navigation }) {
               <Text style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
               <View style={{ flexDirection: 'row' }}>
                 <Text style={styles.sendertime}>{changeDateFormate}</Text>
-
               </View>
-
-
             </View>
+            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
 
           </View>
         )
@@ -411,7 +410,9 @@ function ChatScreen({ route, navigation }) {
       if (massage.massage_type == 'image') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-            <View style={styles.sendfile} >
+             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+
+            <View style={styles.receivefile} >
               <TouchableOpacity onPress={() => showImg(massage.massage)}>
 
                 <Image source={{ uri: massage.massage }}
@@ -444,7 +445,8 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'application') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
               </View>
@@ -456,8 +458,8 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'audio') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-
-            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
 
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
@@ -471,7 +473,8 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'video') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
                 <VideoPlayer
                   source={{ uri: massage.massage }}
@@ -491,6 +494,7 @@ function ChatScreen({ route, navigation }) {
       else {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+            <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
             <View style={styles.receivermsg}>
               <Text style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
@@ -506,15 +510,10 @@ function ChatScreen({ route, navigation }) {
     <View style={styles.container}>
       <Header style={{ backgroundColor: '#3E9487', height: 55, padding: 5 }}>
         <NavigationDrawerStructure navigationProps={navigation} />
-
         <View style={{ flexDirection: 'column', flex: 10 }}>
-          <Text style={styles.headertext}>{route.params.userclickname}</Text>
+          <Text style={styles.headertext}> @ {route.params.userclickname}</Text>
         </View>
-
       </Header>
-      <ImageBackground style={styles.imgBackground}
-        resizeMode='cover'
-        source={require('../assets/bg.jpg')}>
         {
           loader == true ?
             <ProgressBar progress={progress} style={{ height: 5 }} color="#C16AE3" />
@@ -539,7 +538,7 @@ function ChatScreen({ route, navigation }) {
                     onPress={() => launchImageLibrary()} >
                     <Icon
                       name="insert-photo"
-                      size={25}
+                      size={20}
                       color="white"
                     />
                   </TouchableOpacity>
@@ -550,7 +549,7 @@ function ChatScreen({ route, navigation }) {
 
                     <Icon
                       name="insert-drive-file"
-                      size={25}
+                      size={20}
                       color="white"
                     />
                   </TouchableOpacity>
@@ -574,7 +573,6 @@ function ChatScreen({ route, navigation }) {
                 multiline={true}
                 onChangeText={chatMessage => {
                   setChatMessage(chatMessage);
-
                 }}
                 onFocus={() => setShowButtons(false)}
                 onKeyPress={() => setShowButtons(false)}
@@ -588,7 +586,7 @@ function ChatScreen({ route, navigation }) {
 
                   <Icon
                     name="send"
-                    size={25}
+                    size={20}
                     color="white"
                   />
                 </TouchableOpacity>
@@ -622,7 +620,7 @@ function ChatScreen({ route, navigation }) {
             }}
           />
         </View>
-      </ImageBackground>
+     
 
     </View>
   )
@@ -631,7 +629,7 @@ function ChatScreen({ route, navigation }) {
 export default ChatScreen;
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
   cardView: {
     elevation: 3,
@@ -703,7 +701,7 @@ const styles = StyleSheet.create({
     margin: 5,
     elevation: 5,
     padding: 10,
-    backgroundColor: '#E0F6C7',
+    backgroundColor: '#edf7f6',
     borderRadius: 5,
     flexDirection: 'column',
     alignSelf: 'flex-end',

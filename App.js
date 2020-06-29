@@ -14,7 +14,7 @@ import { DrawerContent } from './Screens/DrawerContent';
 import firebase from './database/firebaseDb';
 import RootStackScreen from './Screens/RootStackScreen';
 import { AuthContext } from './components/context';
-
+import ChannelChatScreen from './Screens/ChannelChatScreen'
 console.disableYellowBox = true;
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -117,6 +117,8 @@ const App = () => {
 							<Drawer.Screen name="Dashboard" component={Dashboard} />
 							<Drawer.Screen name="Profile" component={Profile} />
 							<Drawer.Screen name="ChatScreen" component={ChatScreen} />
+							<Drawer.Screen name="ChannelChatScreen" component={ChannelChatScreen} />
+
 						</Drawer.Navigator>
 					)
 					:
@@ -130,5 +132,4 @@ const App = () => {
 }
 
 export default App;
-
 

@@ -6,7 +6,9 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  Text
+  Text,
+  Alert,
+  ScrollView
 } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -21,6 +23,7 @@ import Dialog from "react-native-dialog";
 const WIDTH = Dimensions.get('window').width;
 const HEIGHT = Dimensions.get('window').height;
 let listener;
+let name = "Rao Information Technology"
 export function DrawerContent(props) {
   const [allUser, setAllUser] = useState([])
   const [oldUsers, setoldUsers] = useState([]);
@@ -28,6 +31,7 @@ export function DrawerContent(props) {
   const [dialogVisible, setdialogVisible] = useState(false)
   const [channelName, setChannelName] = useState('');
   const [visibleDirectMassages, setvisibleDirectMassages] = useState(true)
+  const [isAdmin, setIsAdmin] = useState('')
   useEffect(() => {
     getUsers()
     getChannels()
@@ -40,16 +44,21 @@ export function DrawerContent(props) {
    */
   const getUsers = async () => {
     userid = await AsyncStorage.getItem('userid');
+    var adminuser = firebase.database().ref('/users/' + userid)
+    adminuser.once('value').then(snapshot => {
+      if (snapshot.val().role == "admin") {
+        setIsAdmin(snapshot.val().role)
+      }
+    })
     var data = firebase.database().ref('/users/');
     data.once('value').then(snapshot => {
-
       var items = [];
       snapshot.forEach(child => {
         items.push({
           user: child.val().username,
           id: child.val().id,
           isOnline: child.val().isOnline,
-          profilepic: child.val().profilePic
+          profilepic: child.val().profilePic,
         })
       })
       setAllUser(items)
@@ -85,12 +94,21 @@ export function DrawerContent(props) {
 
   }
   const creteChannelfun = () => {
-    let addChannel = firebase.database().ref('channel/').push();
-    console.log("channelName===================", channelName)
-    addChannel.set({
-      channelName: channelName
-    });
-    setdialogVisible(false)
+    if (channelName.length) {
+
+      let addChannel = firebase.database().ref('channel/').push();
+      console.log("channelName===================", channelName)
+      addChannel.set({
+        channelName: channelName
+      });
+      setdialogVisible(false)
+      getChannels()
+    }
+    else {
+      Alert.alert('Wrong Input!', 'Channel Name cannot be empty.', [
+        { text: 'Okay' }
+      ]);
+    }
   }
 
   const handleSearch = (text) => {
@@ -111,15 +129,15 @@ export function DrawerContent(props) {
   const allusersrender = allUser.map((res, index) => {
     if (res.id != userid) {
       return (
-        <TouchableOpacity style={styles.cardView} onPress={() => props.navigation.navigate('ChatScreen', { userclickid: res.id, userclickname: res.user })}>
+        <TouchableOpacity style={[styles.cardView, { borderBottomColor: '#e7e7e7', borderBottomWidth: 1 }]} onPress={() => props.navigation.navigate('ChatScreen', { userclickid: res.id, userclickname: res.user, userClickImage: res.profilepic })}>
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start', flex: 11 }}>
             <View style={styles.userprofile}>
-              <Image style={{ width: 40, height: 40, borderRadius: 50 }} source={res.profilepic ? { uri: res.profilepic } : require('../assets/userpic.png')} />
+              <Image style={{ width: 35, height: 35, borderRadius: 50 }} source={res.profilepic ? { uri: res.profilepic } : require('../assets/userpic.png')} />
               <Icon
                 name="lens"
                 size={12}
                 color={res.isOnline == true ? "#5AC383" : "#808080"}
-                style={[res.isOnline == true ? styles.onlineUser : styles.oflineUser]}
+                style={styles.oflineUser}
               />
             </View>
             <Text style={styles.username}>{res.user}</Text>
@@ -140,7 +158,7 @@ export function DrawerContent(props) {
                   name="lens"
                   size={12}
                   color={res.isOnline == true ? "#5AC383" : "#808080"}
-                  style={[res.isOnline == true ? styles.onlineUser : styles.oflineUser]}
+                  style={styles.oflineUser}
                 />
               </View>
               <Text style={styles.username}>{res.user}</Text>
@@ -159,7 +177,7 @@ export function DrawerContent(props) {
   const renderAllChannels = allchannels.map(res => {
     return (
       <TouchableOpacity style={[styles.cardView, { borderBottomColor: '#e7e7e7', borderBottomWidth: 1 }]}
-        onPress={() => props.navigation.navigate('ChatScreen', { userclickid: res.channelKey, userclickname: '# '+ res.channelname })}>
+        onPress={() => props.navigation.navigate('ChannelChatScreen', { userclickid: res.channelKey, userclickname: '# ' + res.channelname })}>
         <View style={{ flexDirection: 'row', alignSelf: 'flex-start', flex: 11 }}>
           <Text style={styles.username}># {res.channelname}</Text>
         </View>
@@ -172,28 +190,44 @@ export function DrawerContent(props) {
     <View style={{ flex: 1 }}>
 
       <View style={styles.drawerContent}>
-        <View style={{ flexDirection: 'column', flex: 3, backgroundColor: '#3E9487' }}>
-          <DrawerItem
-            icon={() => (
-              <Icon
-                name="chat-bubble"
-                color={'#fff'}
-                size={30}
-              />
-            )}
-            label="Home"
-            onPress={() => setvisibleDirectMassages(true)}
-          />
-          <TouchableOpacity style={styles.sideButtons} onPress={() => setvisibleDirectMassages(false)}>
-            <Text>Rao</Text>
+        <View style={{ flexDirection: 'column', flex: 3, backgroundColor: '#3E9487', alignItems: 'center' }}>
+          <TouchableOpacity style={visibleDirectMassages == true ? styles.onClickedSidebuttons : styles.sideButtons} onPress={() => setvisibleDirectMassages(true)}>
+            {
+              visibleDirectMassages ?
+                <Icon
+                  name="chat-bubble"
+                  color={'#fff'}
+                  size={23}
+                /> :
+                <Icon
+                  name="chat-bubble"
+                  color={'#5a5a5a'}
+                  size={23}
+                />
+            }
           </TouchableOpacity>
-          <TouchableOpacity style={styles.creteChannel} onPress={() => setdialogVisible(true)}>
-            <Icon
-              name="add"
-              color={'#000'}
-              size={35}
-            />
+
+          <TouchableOpacity style={visibleDirectMassages == false ? styles.onClickedSidebuttons : styles.sideButtons} onPress={() => setvisibleDirectMassages(false)}>
+            {
+              visibleDirectMassages ?
+                <Text>Rao</Text>
+                :
+                <Text style={{ color: '#fff' }}>Rao</Text>
+            }
           </TouchableOpacity>
+          {
+            isAdmin == 'admin' ?
+
+              <TouchableOpacity style={styles.creteChannel} onPress={() => setdialogVisible(true)}>
+                <Icon
+                  name="add"
+                  color={'#000'}
+                  size={28}
+                />
+              </TouchableOpacity>
+              : null
+          }
+
           <Dialog.Container
             visible={dialogVisible}>
             <Dialog.Title>Create Channel</Dialog.Title>
@@ -203,7 +237,7 @@ export function DrawerContent(props) {
           </Dialog.Container>
 
         </View>
-        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#fff' }}>
+        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#fff',margin:10 }}>
           {
             visibleDirectMassages ?
               <>
@@ -214,19 +248,27 @@ export function DrawerContent(props) {
                       placeholder='Search...'
                       placeholderTextColor="#3E9487"
                       onChangeText={(text) => handleSearch(text)}
-                      style={{ flex: 1, color: '#fff' }}
+                      style={{ flex: 1, color: '#000' }}
                     />
                     <Icon name='search' size={20} color='#7F7F7F' style={{ paddingTop: 10, paddingRight: 5 }} />
                   </View>
 
                 </View>
-                <Text style={{ color: '#3E9487' }}>
+                <Text style={{ color: '#6A7380' ,fontSize:18}}>
                   Direct Massage
-           </Text>
+               </Text>
+               <ScrollView>
+
                 {allusersrender}
+               </ScrollView>
               </>
               : <>
+                <View >
+                  <Text style={{ fontSize: 20 }}>{name.substring(0, 19)}...</Text>
+                </View>
+                <ScrollView>
                 {renderAllChannels}
+                </ScrollView>
               </>
           }
         </View>
@@ -247,24 +289,33 @@ const styles = StyleSheet.create({
   },
   sideButtons: {
     backgroundColor: "#fff",
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
     borderRadius: 360,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 10
   },
+  onClickedSidebuttons: {
+    backgroundColor: "#2F4F4F",
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10,
+  },
   creteChannel: {
     backgroundColor: "#fff",
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
     borderRadius: 360,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 10
   },
   cardView: {
-    padding: 10,
+    padding: 5,
     flexDirection: 'row',
   },
   img: {
@@ -324,118 +375,21 @@ const styles = StyleSheet.create({
     width: 12,
     position: 'absolute',
     right: -2,
-    bottom: -2,
-    borderColor: '#000',
-    borderWidth: 2,
-    overflow: 'hidden'
-  },
-  onlineUser: {
-    justifyContent: 'center',
-    borderRadius: 360,
-    height: 12,
-    width: 12,
-    position: 'absolute',
-    right: -2,
-    bottom: -3
+    bottom: -2
+   
   },
   bottomDrawerSection: {
     position: 'absolute',
-    top: HEIGHT - 80,
+    top: HEIGHT - 75,
     borderTopColor: '#000',
     borderTopWidth: 1,
     width: '100%',
     height: HEIGHT,
     backgroundColor: "#fff",
-    flexDirection: 'row'
+    flexDirection: 'row',
+    padding:3
   },
 
 });
 
 
-
-//   <View style={styles.drawerContent}>
-//   <View style={styles.userInfoSection}>
-//       <View style={{flexDirection:'row',marginTop: 15}}>
-//           <Avatar.Image 
-//               source={{
-//                   uri: 'https://api.adorable.io/avatars/50/abott@adorable.png'
-//               }}
-//               size={50}
-//           />
-//           <View style={{marginLeft:15, flexDirection:'column'}}>
-//               <Title style={styles.title}>John Doe</Title>
-//               <Caption style={styles.caption}>@j_doe</Caption>
-//           </View>
-//       </View>
-
-//       <View style={styles.row}>
-//           <View style={styles.section}>
-//               <Paragraph style={[styles.paragraph, styles.caption]}>80</Paragraph>
-//               <Caption style={styles.caption}>Following</Caption>
-//           </View>
-//           <View style={styles.section}>
-//               <Paragraph style={[styles.paragraph, styles.caption]}>100</Paragraph>
-//               <Caption style={styles.caption}>Followers</Caption>
-//           </View>
-//       </View>
-//   </View>
-
-//   <Drawer.Section style={styles.drawerSection}>
-    //   <DrawerItem 
-    //       icon={({color, size}) => (
-    //           <Icon 
-    //           name="home-outline" 
-    //           color={color}
-    //           size={size}
-    //           />
-    //       )}
-    //       label="Home"
-    //       onPress={() => {props.navigation.navigate('Home')}}
-    //   />
-//       <DrawerItem 
-//           icon={({color, size}) => (
-//               <Icon 
-//               name="account-outline" 
-//               color={color}
-//               size={size}
-//               />
-//           )}
-//           label="Profile"
-//           onPress={() => {props.navigation.navigate('Profile')}}
-//       />
-//       <DrawerItem 
-//           icon={({color, size}) => (
-//               <Icon 
-//               name="bookmark-outline" 
-//               color={color}
-//               size={size}
-//               />
-//           )}
-//           label="Bookmarks"
-//           onPress={() => {props.navigation.navigate('BookmarkScreen')}}
-//       />
-//       <DrawerItem 
-//           icon={({color, size}) => (
-//               <Icon 
-//               name="settings-outline" 
-//               color={color}
-//               size={size}
-//               />
-//           )}
-//           label="Settings"
-//           onPress={() => {props.navigation.navigate('SettingScreen')}}
-//       />
-//       <DrawerItem 
-//           icon={({color, size}) => (
-//               <Icon 
-//               name="account-check-outline" 
-//               color={color}
-//               size={size}
-//               />
-//           )}
-//           label="Support"
-//           onPress={() => {props.navigation.navigate('SupportScreen')}}
-//       />
-//   </Drawer.Section>
-
-// </View>
