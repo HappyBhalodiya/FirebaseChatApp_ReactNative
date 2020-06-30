@@ -13,8 +13,10 @@ import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import VideoPlayer from 'react-native-video-controls';
 import AwesomeAlert from 'react-native-awesome-alerts';
-import { ProgressBar, Colors } from 'react-native-paper';
+import { ProgressBar, List } from 'react-native-paper';
 import ParsedText from 'react-native-parsed-text';
+import { EventRegister } from 'react-native-event-listeners'
+
 const NavigationDrawerStructure = (props) => {
     const toggleDrawer = () => {
         props.navigationProps.toggleDrawer();
@@ -33,6 +35,7 @@ const NavigationDrawerStructure = (props) => {
 let userid;
 let messageDateString;
 let isMention;
+let channelkey;
 function ChannelChatScreen({ route, navigation }) {
     const [chatMessage, setChatMessage] = useState('')
     const [showButtons, setShowButtons] = useState(false)
@@ -46,15 +49,16 @@ function ChannelChatScreen({ route, navigation }) {
     const [channelMassages, setchannelMassages] = useState([])
     const scrollViewRef = useRef();
     const [allUSerName, setAllUSerName] = useState([])
+    const [oldUserName, setoldUserName ] = useState([])
+
     const Blob = RNFetchBlob.polyfill.Blob;
     const fs = RNFetchBlob.fs;
     window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
     window.Blob = Blob;
 
     useEffect(() => {
-
         getAllMassages()
-    },[])
+    }, [])
 
 
     /**
@@ -62,6 +66,25 @@ function ChannelChatScreen({ route, navigation }) {
      */
     const getAllMassages = async () => {
         userid = await AsyncStorage.getItem('userid');
+        channelkey = EventRegister.addEventListener('updateChannel', (userclickedid) => {
+            console.log("click id======",userclickedid)
+             firebase.database().ref('/channel_data/' + userclickedid).on('value' , resp => {
+                var channel_massages = [];
+                resp.forEach(child => {
+                    channel_massages.push({
+                        massage: child.val().massage,
+                        receiverId: child.val().receiverId,
+                        senderId: child.val().senderId,
+                        date: child.val().date,
+                        massage_type: child.val().massage_type,
+                        fileName: child.val().fileName,
+                        senderProfile: child.val().senderProfile,
+                        senderName: child.val().senderName
+                    })
+                })
+                setchannelMassages(channel_massages);
+            })
+        })
         var currentUserData = firebase.database().ref('/users/' + userid);
         currentUserData.once('value').then(snapshot => {
             setcurrentUserProfile(snapshot.val().profilePic)
@@ -72,29 +95,14 @@ function ChannelChatScreen({ route, navigation }) {
             var item = [];
             snapshot.forEach(child => {
                 item.push({
-                    username: child.val().username.replace(/\s/g,''),
-                    userProfilepic : child.val().profilePic
+                    username: child.val().username.replace(/\s/g, ''),
+                    userProfilepic: child.val().profilePic
                 })
             })
             setAllUSerName(item)
+            setoldUserName(item)
         })
-        var channelData = firebase.database().ref('/channel_data/' + route.params.userclickid);
-        channelData.once('value').then(resp => {
-            var channel_massages = [];
-            resp.forEach(child => {
-                channel_massages.push({
-                    massage: child.val().massage,
-                    receiverId: child.val().receiverId,
-                    senderId: child.val().senderId,
-                    date: child.val().date,
-                    massage_type: child.val().massage_type,
-                    fileName: child.val().fileName,
-                    senderProfile: child.val().senderProfile,
-                    senderName: child.val().senderName
-                })
-            })
-            setchannelMassages(channel_massages);
-        })
+
     }
 
     /**
@@ -120,9 +128,9 @@ function ChannelChatScreen({ route, navigation }) {
             senderProfile: currentUserProfile,
             senderName: currentUserName
         });
+        getAllMassages()
         setChatMessage('')
         setLoader(false)
-        getAllMassages()
     }
 
     /**
@@ -256,7 +264,6 @@ function ChannelChatScreen({ route, navigation }) {
      */
     const renderAllMassages = channelMassages.map((massage, index) => {
 
-
         let changeDateFormate = moment(massage.date).format('h:mm a')
         if (massage.receiverId == route.params.userclickid) {
 
@@ -371,7 +378,7 @@ function ChannelChatScreen({ route, navigation }) {
                             <Text style={styles.sendername}>{massage.senderName}</Text>
                             <View style={styles.sendermsg}>
                                 <ParsedText
-                                    style={ { marginRight: 50, fontSize: 16 }}
+                                    style={{ marginRight: 50, fontSize: 16 }}
                                     parse={
                                         [
                                             { pattern: /@(\w+)/, style: { color: 'blue', marginRight: 50, fontSize: 16 } },
@@ -381,7 +388,7 @@ function ChannelChatScreen({ route, navigation }) {
                                 >
                                     {massage.massage}
                                 </ParsedText>
-                                {/* <Text style={ { color: 'blue', marginRight: 50, fontSize: 16 } : { marginRight: 50, fontSize: 16 }}>{massage.massage}</Text> */}
+                                
                                 <View style={{ flexDirection: 'row' }}>
                                     <Text style={styles.sendertime}>{changeDateFormate}</Text>
                                 </View>
@@ -396,22 +403,21 @@ function ChannelChatScreen({ route, navigation }) {
 
     })
     const allusersrender = allUSerName.map(data => {
-       
+        
         return (
-            <TouchableOpacity style={{ flexDirection: 'row',borderBottomWidth:1,borderBottomColor:'#e7e7e7' }} onPress={() => [chatMessage.length ? setChatMessage(chatMessage + data.username) : setChatMessage(data.username), isMention = false]}>
-                <Image style={{width:35,height:35,margin:10,borderRadius:360}} source={data.userProfilepic ? { uri: data.userProfilepic } : require('../assets/userpic.png')}></Image>
+            <TouchableOpacity style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e7e7e7' }} onPress={() => [chatMessage.length ? setChatMessage(chatMessage + data.username) : setChatMessage(data.username), isMention = false]}>
+                <Image style={{ width: 35, height: 35, margin: 10, borderRadius: 360 }} source={data.userProfilepic ? { uri: data.userProfilepic } : require('../assets/userpic.png')}></Image>
                 <Text style={{ fontSize: 20, margin: 10 }}>{data.username}</Text>
             </TouchableOpacity>
         )
     })
     const checkMention = (chatMessage) => {
-
+        
+       
         let char = chatMessage.charAt(chatMessage.length - 1);
         if (char == '@') {
             isMention = true;
-        } else {
-            isMention = false;
-        }
+        } 
     }
     return (
         <View style={styles.container}>
@@ -423,7 +429,6 @@ function ChannelChatScreen({ route, navigation }) {
                 </View>
 
             </Header>
-
             {
                 loader == true ?
                     <ProgressBar progress={progress} style={{ height: 5 }} color="#C16AE3" />
@@ -438,7 +443,7 @@ function ChannelChatScreen({ route, navigation }) {
                 </ScrollView>
                 {
                     isMention ?
-                        <View style={{ flexDirection: 'row', height: 200,backgroundColor:'#c9e8e4',margin:10,borderTopLeftRadius:10,borderTopRightRadius:10 }}>
+                        <View style={{ flexDirection: 'row', height: 200, backgroundColor: '#c9e8e4', margin: 10, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
                             <ScrollView>
                                 {allusersrender}
                             </ScrollView>
@@ -446,7 +451,6 @@ function ChannelChatScreen({ route, navigation }) {
                         : null
                 }
                 <View style={styles.footer}>
-
                     {
                         showButtons == true ?
                             <>
@@ -479,9 +483,7 @@ function ChannelChatScreen({ route, navigation }) {
                                     color="white"
                                 />
                             </TouchableOpacity>
-
                     }
-
                     <TouchableOpacity style={styles.inputContainer}>
 
                         <TextInput
@@ -498,11 +500,9 @@ function ChannelChatScreen({ route, navigation }) {
                             onFocus={() => setShowButtons(false)}
                             onKeyPress={() => setShowButtons(false)}
                         />
-
                     </TouchableOpacity>
                     {
                         !showButtons ?
-
                             <TouchableOpacity style={styles.btnSend} onPress={() => submitChatMessage(chatMessage, 'text', 'empty')}>
 
                                 <Icon
@@ -511,16 +511,11 @@ function ChannelChatScreen({ route, navigation }) {
                                     color="white"
                                 />
                             </TouchableOpacity>
-
-
                             : null
                     }
-
                 </View>
                 <View>
                 </View>
-
-
                 <AwesomeAlert
                     show={showAlert}
                     showProgress={false}
@@ -551,12 +546,6 @@ export default ChannelChatScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    cardView: {
-        elevation: 3,
-        padding: 10,
-        margin: 5,
-        backgroundColor: "#fff"
     },
     headertext: {
         fontSize: 20,
@@ -628,29 +617,12 @@ const styles = StyleSheet.create({
         borderColor: '#e7e7e7',
         margin: 5
     },
-    imgBackground: {
-        width: '100%',
-        height: '100%',
-        flex: 1,
-    },
-    receivertime: {
-        color: '#999999',
-        fontSize: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     sendertime: {
         fontSize: 12,
         color: '#859B74',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    status: {
-        position: 'absolute',
-        bottom: 0,
-        right: 5
-    },
-
     bottomBtn: {
         flexDirection: 'column',
         width: 40,
@@ -672,25 +644,6 @@ const styles = StyleSheet.create({
     selectImage: {
         height: 500,
         width: "100%"
-    },
-    video: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
-    },
-    selected: {
-        backgroundColor: '#ADD2DB',
-        marginLeft: 0,
-        paddingLeft: 18,
-    },
-    normal: {
-        flex: 1
-    },
-    videoContainer: {
-        height: 250,
-        width: 180,
     },
     sendername: {
         marginLeft: 5,

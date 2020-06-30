@@ -10,16 +10,12 @@ import {
   Alert,
   ScrollView
 } from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerItem
-} from '@react-navigation/drawer';
 import Icon from "react-native-vector-icons/MaterialIcons";
 import firebase from '../database/firebaseDb';
 import AsyncStorage from '@react-native-community/async-storage';
 import { EventRegister } from 'react-native-event-listeners'
 import Dialog from "react-native-dialog";
-
+import { List } from 'react-native-paper';
 const WIDTH = Dimensions.get('window').width;
 const HEIGHT = Dimensions.get('window').height;
 let listener;
@@ -28,10 +24,18 @@ export function DrawerContent(props) {
   const [allUser, setAllUser] = useState([])
   const [oldUsers, setoldUsers] = useState([]);
   const [allchannels, setallchannels] = useState([]);
-  const [dialogVisible, setdialogVisible] = useState(false)
+  const [allVoicechannels, setallVoicechannels] = useState([]);
+  const [dialogVisibleText, setdialogVisibleText] = useState(false)
+  const [dialogVisibleVoice, setdialogVisibleVoice] = useState(false)
   const [channelName, setChannelName] = useState('');
+  const [voicechannelName, setVoiceChannelName] = useState('');
   const [visibleDirectMassages, setvisibleDirectMassages] = useState(true)
   const [isAdmin, setIsAdmin] = useState('')
+  const [expanded, setExpanded] = React.useState(true);
+  const handlePress = () => setExpanded(!expanded);
+
+  const [expandedvoice, setExpandedVoice] = React.useState(false);
+  const voicepress = () => setExpandedVoice(!expandedvoice);
   useEffect(() => {
     getUsers()
     getChannels()
@@ -78,10 +82,12 @@ export function DrawerContent(props) {
       setAllUser(newData)
     })
   }
-
+  /**
+   * Get Text and Voice channel
+   */
   const getChannels = () => {
-    var data = firebase.database().ref('/channel/');
-    data.once('value').then(res_channel => {
+    var textChannel = firebase.database().ref('/channel/');
+    textChannel.once('value').then(res_channel => {
       var channels = [];
       res_channel.forEach(child => {
         channels.push({
@@ -92,8 +98,23 @@ export function DrawerContent(props) {
       setallchannels(channels)
     })
 
+    var voiceChannel = firebase.database().ref('/voice_channel/');
+    voiceChannel.once('value').then(res_channel => {
+      var voicechannels = [];
+      res_channel.forEach(child => {
+        voicechannels.push({
+          voicechannelname: child.val().voicechannelName,
+          voicechannelKey: child.key
+        })
+      })
+      setallVoicechannels(voicechannels)
+    })
+
   }
-  const creteChannelfun = () => {
+  /**
+   * Create Text Channel
+   */
+  const creteTextChannelfun = () => {
     if (channelName.length) {
 
       let addChannel = firebase.database().ref('channel/').push();
@@ -101,7 +122,7 @@ export function DrawerContent(props) {
       addChannel.set({
         channelName: channelName
       });
-      setdialogVisible(false)
+      setdialogVisibleText(false)
       getChannels()
     }
     else {
@@ -111,6 +132,29 @@ export function DrawerContent(props) {
     }
   }
 
+  /**
+   * Create Voice Channel
+   */
+  const creteVoiceChannelfun = () => {
+    if (voicechannelName.length) {
+      let addVoiceChannel = firebase.database().ref('voice_channel/').push();
+      console.log("channelName===================", voicechannelName)
+      addVoiceChannel.set({
+        voicechannelName: voicechannelName
+      });
+      setdialogVisibleVoice(false)
+      getChannels()
+    }
+    else {
+      Alert.alert('Wrong Input!', 'Channel Name cannot be empty.', [
+        { text: 'Okay' }
+      ]);
+    }
+  }
+  /**
+   * @param {any} text onChange Text
+   * This function for serch Users
+   */
   const handleSearch = (text) => {
     if (!text) {
       setAllUser(oldUsers)
@@ -121,10 +165,13 @@ export function DrawerContent(props) {
         console.log(itemData.indexOf(textData) > -1)
         return itemData.indexOf(textData) > -1
       })
+      console.log('filterList', filterList)
       setAllUser(filterList)
     }
   }
-
+  /**
+   * Render All Users
+   */
 
   const allusersrender = allUser.map((res, index) => {
     if (res.id != userid) {
@@ -146,6 +193,10 @@ export function DrawerContent(props) {
       )
     }
   })
+
+  /**
+   * Render Current User
+   */
   const getCurrentUser = allUser.map((res, index) => {
     if (res.id == userid) {
       return (
@@ -173,18 +224,27 @@ export function DrawerContent(props) {
       )
     }
   })
-
-  const renderAllChannels = allchannels.map(res => {
+  /**
+   * Render all Text channel
+   */
+  const renderAllTextChannels = allchannels.map(res => {
     return (
-      <TouchableOpacity style={[styles.cardView, { borderBottomColor: '#e7e7e7', borderBottomWidth: 1 }]}
-        onPress={() => props.navigation.navigate('ChannelChatScreen', { userclickid: res.channelKey, userclickname: '# ' + res.channelname })}>
-        <View style={{ flexDirection: 'row', alignSelf: 'flex-start', flex: 11 }}>
-          <Text style={styles.username}># {res.channelname}</Text>
-        </View>
-      </TouchableOpacity>
+
+      <List.Item style={styles.voiceChannelname} title={'#  ' + res.channelname}
+        onPress={() => [EventRegister.emit('updateChannel', res.channelKey), props.navigation.navigate('ChannelChatScreen',
+          { userclickid: res.channelKey, userclickname: '# ' + res.channelname })]} />
     )
   })
-
+  /**
+   * Render all Voice Channnels
+   */
+  const renderAllVoiceChannels = allVoicechannels.map(res => {
+    return (
+      <List.Item 
+      left={props => <Icon {...props} size={25} style={{marginRight:0,marginTop:5}} name="volume-up"/>}
+       style={[styles.voiceChannelname,{marginLeft:0}]} title={res.voicechannelname} />
+    )
+  })
 
   return (
     <View style={{ flex: 1 }}>
@@ -217,27 +277,43 @@ export function DrawerContent(props) {
           </TouchableOpacity>
           {
             isAdmin == 'admin' ?
-
-              <TouchableOpacity style={styles.creteChannel} onPress={() => setdialogVisible(true)}>
-                <Icon
-                  name="add"
-                  color={'#000'}
-                  size={28}
-                />
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity style={styles.creteChannel} onPress={() => setdialogVisibleText(true)}>
+                  <Icon
+                    name="add"
+                    color={'#000'}
+                    size={28}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.creteChannel} onPress={() => setdialogVisibleVoice(true)}>
+                  <Icon
+                    name="call"
+                    color={'#000'}
+                    size={28}
+                  />
+                </TouchableOpacity>
+              </>
               : null
           }
-
+          {/* Dialog box for create Voice Channel */}
           <Dialog.Container
-            visible={dialogVisible}>
-            <Dialog.Title>Create Channel</Dialog.Title>
+            visible={dialogVisibleVoice}>
+            <Dialog.Title>Create Voice Channel</Dialog.Title>
+            <Dialog.Input style={{ borderColor: '#000000', borderWidth: 2 }} onChangeText={(text) => setVoiceChannelName(text)} autoFocus={true} />
+            <Dialog.Button label="Add" onPress={() => creteVoiceChannelfun()} />
+            <Dialog.Button label="Cancel" onPress={() => setdialogVisibleVoice(false)} />
+          </Dialog.Container>
+          {/* Dialog box for create Text Channel */}
+          <Dialog.Container
+            visible={dialogVisibleText}>
+            <Dialog.Title>Create Text Channel</Dialog.Title>
             <Dialog.Input style={{ borderColor: '#000000', borderWidth: 2 }} onChangeText={(text) => setChannelName(text)} autoFocus={true} />
-            <Dialog.Button label="Add" onPress={() => creteChannelfun()} />
-            <Dialog.Button label="Cancel" onPress={() => setdialogVisible(false)} />
+            <Dialog.Button label="Add" onPress={() => creteTextChannelfun()} />
+            <Dialog.Button label="Cancel" onPress={() => setdialogVisibleText(false)} />
           </Dialog.Container>
 
         </View>
-        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#fff',margin:10 }}>
+        <View style={{ flexDirection: 'column', flex: 9, backgroundColor: '#fff', margin: 10 }}>
           {
             visibleDirectMassages ?
               <>
@@ -254,20 +330,39 @@ export function DrawerContent(props) {
                   </View>
 
                 </View>
-                <Text style={{ color: '#6A7380' ,fontSize:18}}>
+                <Text style={{ color: '#6A7380', fontSize: 18 }}>
                   Direct Massage
                </Text>
-               <ScrollView>
+                <ScrollView>
 
-                {allusersrender}
-               </ScrollView>
+                  {allusersrender}
+                </ScrollView>
               </>
               : <>
                 <View >
                   <Text style={{ fontSize: 20 }}>{name.substring(0, 19)}...</Text>
                 </View>
                 <ScrollView>
-                {renderAllChannels}
+
+                  <List.Section>
+                    <List.Accordion
+                      title="Text Channels"
+                      theme={expanded ? { colors: { primary: '#3E9487' } } : { colors: { primary: '#6A7380' } }}
+                      onPress={handlePress} 
+                      expanded={expanded}>
+                      {renderAllTextChannels}
+                    </List.Accordion>
+                  </List.Section>
+                  <List.Section>
+                    <List.Accordion
+                      title="Voice Channels"
+                      expanded={expandedvoice}
+                      onPress={voicepress}
+                      theme={expandedvoice ? { colors: { primary: '#3E9487' } } : { colors: { primary: '#6A7380' } }}
+                    >
+                      {renderAllVoiceChannels}
+                    </List.Accordion>
+                  </List.Section>
                 </ScrollView>
               </>
           }
@@ -334,6 +429,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: '#000'
   },
+  voiceChannelname: {
+    fontSize: 18,
+    alignItems: 'center',
+    marginLeft: 3,
+    textAlign: 'center',
+    color: '#000'
+  },
   headertext: {
     fontSize: 20,
     color: '#fff',
@@ -376,7 +478,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -2,
     bottom: -2
-   
+
   },
   bottomDrawerSection: {
     position: 'absolute',
@@ -387,7 +489,7 @@ const styles = StyleSheet.create({
     height: HEIGHT,
     backgroundColor: "#fff",
     flexDirection: 'row',
-    padding:3
+    padding: 3
   },
 
 });

@@ -51,7 +51,8 @@ function ChatScreen({ route, navigation }) {
   window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
   window.Blob = Blob;
 
-  useEffect(() => {console.log(route.params.userclickid,route.params.userclickname)
+  useEffect(() => {
+    console.log("in chat screen",route.params.userclickid, route.params.userclickname)
     getAllMassages()
   }, [])
 
@@ -112,12 +113,9 @@ function ChatScreen({ route, navigation }) {
   const getAllMassages = async () => {
     userid = await AsyncStorage.getItem('userid');
     var currentUserData = firebase.database().ref('/users/' + userid);
-        currentUserData.once('value').then(snapshot => {
-            setcurrentUserProfile(snapshot.val().profilePic)
-        })
-   
-  
-
+    currentUserData.once('value').then(snapshot => {
+      setcurrentUserProfile(snapshot.val().profilePic)
+    })
     firebase.database().ref('chat_data/').on('value', resp => {
       var massages = [];
       resp.forEach(child => {
@@ -295,9 +293,9 @@ function ChatScreen({ route, navigation }) {
    * Render All Massages from Firebase
    */
   const renderAllMassages = allChats.map((massage, index) => {
+    
 
     let changeDateFormate = moment(massage.date).format('h:mm a')
-
 
     // if (isDifferentDay(index)) {
     //   console.log(getMessageDate(index))
@@ -340,7 +338,7 @@ function ChatScreen({ route, navigation }) {
                 </View>
               </View>
             </Modal>
-            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={currentUserProfile ? { uri: currentUserProfile } : require('../assets/userpic.png')} />
           </View>
         )
       } else if (massage.massage_type == 'application') {
@@ -352,7 +350,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={currentUserProfile ? { uri: currentUserProfile } : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -366,7 +364,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={currentUserProfile ? { uri: currentUserProfile } : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -387,7 +385,7 @@ function ChatScreen({ route, navigation }) {
               </View>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
             </TouchableOpacity>
-            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={currentUserProfile ? { uri: currentUserProfile } : require('../assets/userpic.png')} />
           </View>
         )
       }
@@ -400,7 +398,7 @@ function ChatScreen({ route, navigation }) {
                 <Text style={styles.sendertime}>{changeDateFormate}</Text>
               </View>
             </View>
-            <Image style={styles.img} source={currentUserProfile? { uri: currentUserProfile} : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={currentUserProfile ? { uri: currentUserProfile } : require('../assets/userpic.png')} />
 
           </View>
         )
@@ -410,7 +408,7 @@ function ChatScreen({ route, navigation }) {
       if (massage.massage_type == 'image') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={route.params.userClickImage ? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
 
             <View style={styles.receivefile} >
               <TouchableOpacity onPress={() => showImg(massage.massage)}>
@@ -445,7 +443,7 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'application') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={route.params.userClickImage ? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
             <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
                 <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
@@ -458,7 +456,7 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'audio') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={route.params.userClickImage ? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
             <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
 
@@ -473,7 +471,7 @@ function ChatScreen({ route, navigation }) {
       else if (massage.massage_type == 'video') {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-             <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={route.params.userClickImage ? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
             <TouchableOpacity style={styles.receivefile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
               <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
                 <VideoPlayer
@@ -494,7 +492,7 @@ function ChatScreen({ route, navigation }) {
       else {
         return (
           <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-            <Image style={styles.img} source={route.params.userClickImage? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
+            <Image style={styles.img} source={route.params.userClickImage ? { uri: route.params.userClickImage } : require('../assets/userpic.png')} />
             <View style={styles.receivermsg}>
               <Text style={{ marginRight: 50, fontSize: 16 }}>{massage.massage}</Text>
               <Text style={styles.sendertime}>{changeDateFormate}</Text>
@@ -514,113 +512,107 @@ function ChatScreen({ route, navigation }) {
           <Text style={styles.headertext}> @ {route.params.userclickname}</Text>
         </View>
       </Header>
-        {
-          loader == true ?
-            <ProgressBar progress={progress} style={{ height: 5 }} color="#C16AE3" />
-            : null
-        }
-        <View style={{ flex: 6 }}>
-          <ScrollView ref={scrollViewRef}
-            onContentSizeChange={(contentWidth, contentHeight) => { scrollViewRef.current.scrollToEnd({ animated: true }) }}>
-            <View>
-              {renderAllMassages}
-            </View>
-          </ScrollView>
-          <View style={styles.footer}>
+      {
+        loader == true ?
+          <ProgressBar progress={progress} style={{ height: 5 }} color="#C16AE3" />
+          : null
+      }
+      <View style={{ flex: 6 }}>
+        <ScrollView ref={scrollViewRef}
+          onContentSizeChange={(contentWidth, contentHeight) => { scrollViewRef.current.scrollToEnd({ animated: true }) }}>
+          <View>
+            {renderAllMassages}
+          </View>
+        </ScrollView>
+        <View style={styles.footer}>
 
 
-            {
-              showButtons == true ?
-                <>
-                  <TouchableOpacity
+          {
+            showButtons == true ?
+              <>
+                <TouchableOpacity
 
-                    style={styles.bottomBtn}
-                    onPress={() => launchImageLibrary()} >
-                    <Icon
-                      name="insert-photo"
-                      size={20}
-                      color="white"
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.bottomBtn}
-                    onPress={() => FilePicker()}>
-
-                    <Icon
-                      name="insert-drive-file"
-                      size={20}
-                      color="white"
-                    />
-                  </TouchableOpacity>
-                </>
-                : <TouchableOpacity style={styles.btnSend} onPress={() => setShowButtons(true)}>
+                  style={styles.bottomBtn}
+                  onPress={() => launchImageLibrary()} >
                   <Icon
-                    name="keyboard-arrow-right"
-                    size={25}
-                    color="white"
-                  />
-                </TouchableOpacity>
-
-            }
-
-            <TouchableOpacity style={styles.inputContainer}>
-              <TextInput
-                style={styles.inputs}
-                autoCorrect={false}
-                value={chatMessage}
-                placeholder="Type a message"
-                multiline={true}
-                onChangeText={chatMessage => {
-                  setChatMessage(chatMessage);
-                }}
-                onFocus={() => setShowButtons(false)}
-                onKeyPress={() => setShowButtons(false)}
-              />
-
-            </TouchableOpacity>
-            {
-              !showButtons ?
-
-                <TouchableOpacity style={styles.btnSend} onPress={() => submitChatMessage(chatMessage, 'text', 'empty')}>
-
-                  <Icon
-                    name="send"
+                    name="insert-photo"
                     size={20}
                     color="white"
                   />
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.bottomBtn}
+                  onPress={() => FilePicker()}>
 
-                : null
-            }
+                  <Icon
+                    name="insert-drive-file"
+                    size={20}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </>
+              : <TouchableOpacity style={styles.btnSend} onPress={() => setShowButtons(true)}>
+                <Icon
+                  name="keyboard-arrow-right"
+                  size={25}
+                  color="white"
+                />
+              </TouchableOpacity>
 
-          </View>
-          <View>
-          </View>
+          }
 
-
-          <AwesomeAlert
-            show={showAlert}
-            showProgress={false}
-            title="Send Audio Sms"
-            message="I have a message for you!"
-            closeOnTouchOutside={true}
-            closeOnHardwareBackPress={false}
-            showCancelButton={true}
-            showConfirmButton={true}
-            cancelText="No, delete it "
-            confirmText="Yes, send it"
-            confirmButtonColor="#DD6B55"
-            onCancelPressed={() => {
-              setshowAlert(false)
-            }}
-            onConfirmPressed={() => {
-              uploadFileInFirebase(resultrecordedfile, resultrecordedfile.split('/')[4], 'audio')
-            }}
-          />
+          <TouchableOpacity style={styles.inputContainer}>
+            <TextInput
+              style={styles.inputs}
+              autoCorrect={false}
+              value={chatMessage}
+              placeholder="Type a message"
+              multiline={true}
+              onChangeText={chatMessage => {
+                setChatMessage(chatMessage);
+              }}
+              onFocus={() => setShowButtons(false)}
+              onKeyPress={() => setShowButtons(false)}
+            />
+          </TouchableOpacity>
+          {
+            !showButtons ?
+              <TouchableOpacity style={styles.btnSend} onPress={() => submitChatMessage(chatMessage, 'text', 'empty')}>
+                <Icon
+                  name="send"
+                  size={20}
+                  color="white"
+                />
+              </TouchableOpacity>
+              : null
+          }
         </View>
-     
+        <View>
+        </View>
+
+
+        <AwesomeAlert
+          show={showAlert}
+          showProgress={false}
+          title="Send Audio Sms"
+          message="I have a message for you!"
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={false}
+          showCancelButton={true}
+          showConfirmButton={true}
+          cancelText="No, delete it "
+          confirmText="Yes, send it"
+          confirmButtonColor="#DD6B55"
+          onCancelPressed={() => {
+            setshowAlert(false)
+          }}
+          onConfirmPressed={() => {
+            uploadFileInFirebase(resultrecordedfile, resultrecordedfile.split('/')[4], 'audio')
+          }}
+        />
+      </View>
+
 
     </View>
   )
@@ -630,12 +622,6 @@ export default ChatScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1
-  },
-  cardView: {
-    elevation: 3,
-    padding: 10,
-    margin: 5,
-    backgroundColor: "#fff"
   },
   headertext: {
     fontSize: 20,
@@ -727,29 +713,12 @@ const styles = StyleSheet.create({
     borderColor: '#e7e7e7',
     margin: 5
   },
-  imgBackground: {
-    width: '100%',
-    height: '100%',
-    flex: 1,
-  },
-  receivertime: {
-    color: '#999999',
-    fontSize: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   sendertime: {
     fontSize: 12,
     color: '#859B74',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  status: {
-    position: 'absolute',
-    bottom: 0,
-    right: 5
-  },
-
   bottomBtn: {
     flexDirection: 'column',
     width: 40,
@@ -772,23 +741,5 @@ const styles = StyleSheet.create({
     height: 500,
     width: "100%"
   },
-  video: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
-  },
-  selected: {
-    backgroundColor: '#ADD2DB',
-    marginLeft: 0,
-    paddingLeft: 18,
-  },
-  normal: {
-    flex: 1
-  },
-  videoContainer: {
-    height: 250,
-    width: 180,
-  },
+
 })
