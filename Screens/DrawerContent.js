@@ -241,7 +241,7 @@ export function DrawerContent(props) {
   const renderAllVoiceChannels = allVoicechannels.map(res => {
     return (
       <List.Item 
-      left={props => <Icon {...props} size={25} style={{marginRight:0,marginTop:5}} name="volume-up"/>}
+      left={props => <Icon {...props} size={25} style={{marginLeft:5,marginTop:5}} name="volume-up"/>}
        style={[styles.voiceChannelname,{marginLeft:0}]} title={res.voicechannelname} />
     )
   })

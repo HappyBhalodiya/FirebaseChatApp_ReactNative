@@ -14,6 +14,7 @@ import FileViewer from 'react-native-file-viewer';
 import VideoPlayer from 'react-native-video-controls';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import { ProgressBar, Colors } from 'react-native-paper';
+import axios from 'axios';
 const NavigationDrawerStructure = (props) => {
   const toggleDrawer = () => {
     props.navigationProps.toggleDrawer();
@@ -45,6 +46,7 @@ function ChatScreen({ route, navigation }) {
   const [progress, setProgress] = useState('')
   const scrollViewRef = useRef();
   const [currentUserProfile, setcurrentUserProfile] = useState('')
+  const [token, setToken] = useState('')
 
   const Blob = RNFetchBlob.polyfill.Blob;
   const fs = RNFetchBlob.fs;
@@ -52,7 +54,7 @@ function ChatScreen({ route, navigation }) {
   window.Blob = Blob;
 
   useEffect(() => {
-    console.log("in chat screen",route.params.userclickid, route.params.userclickname)
+    console.log("in chat screen", route.params.userclickid, route.params.userclickname)
     getAllMassages()
   }, [])
 
@@ -116,6 +118,11 @@ function ChatScreen({ route, navigation }) {
     currentUserData.once('value').then(snapshot => {
       setcurrentUserProfile(snapshot.val().profilePic)
     })
+    var userToken = firebase.database().ref('/users/' + route.params.userclickid);
+    userToken.once('value').then(snapshot => {
+      setToken(snapshot.val().fcmToken)
+    })
+
     firebase.database().ref('chat_data/').on('value', resp => {
       var massages = [];
       resp.forEach(child => {
@@ -127,7 +134,8 @@ function ChatScreen({ route, navigation }) {
           massage_type: child.val().massage_type,
           fileName: child.val().fileName,
           isRead: child.val().isRead,
-          key: child.key
+          key: child.key,
+          fcmToken: child.val().fcmToken
         })
       })
       setallChats(massages)
@@ -143,7 +151,7 @@ function ChatScreen({ route, navigation }) {
    * @param {any} fileName name of File
    * Store all Massages or file in Firebase Database
    */
-  const submitChatMessage = (massages, type, fileName) => {
+  const submitChatMessage = async (massages, type, fileName) => {
 
     let date = new Date();
     let formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
@@ -156,10 +164,41 @@ function ChatScreen({ route, navigation }) {
       date: formattedDate,
       massage_type: type,
       fileName: fileName,
-      isRead: false
-
+      isRead: false,
     });
+
+    console.log("token====",token)
+    const data = {
+      'to': token,
+      'notification': {
+        'body': massages,
+        'title': "React Native Firebase",
+        'content_available': true,
+        'priority': "high"
+      },
+      'data': {
+        'body': massages,
+        'title': "React Native Firebase",
+        'content_available': true,
+        'priority': "high"
+      }
+    };
+    let url = 'https://fcm.googleapis.com/fcm/send'
+    axios.post(url, data, {
+      headers: {
+      'Authorization': "key=" + 'AAAArUxcL_Q:APA91bFcAl3t_F-8Jje-YBt5Nqm3mb-a2seCEgGIxQHtL3tloRrYBt-1sErkTljzbzeLN0TGys4giwdmIfMtPaXYgTbAk5jWDYczEoM9Qxod4XnZM6OI4brkpIzkt7kgrvuFPAZIp6gB',
+      'Content-Type': 'application/json'
+      }
+    })
+      .then((response) => {
+        console.log(">>>>>>>>>>>>>>>>>>>>>>>",response)
+      })
+      .catch((error) => {
+        console.log("Error::::::::::::::::::::::::;",error)
+      })
+
     setChatMessage('')
+
     setLoader(false)
   }
 
@@ -293,7 +332,7 @@ function ChatScreen({ route, navigation }) {
    * Render All Massages from Firebase
    */
   const renderAllMassages = allChats.map((massage, index) => {
-    
+
 
     let changeDateFormate = moment(massage.date).format('h:mm a')
 

@@ -14,6 +14,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import firebase from '../database/firebaseDb';
 import * as Animatable from 'react-native-animatable';
+import AsyncStorage from '@react-native-community/async-storage';
 
 
 function AddUser({ navigation }) {
@@ -25,7 +26,7 @@ function AddUser({ navigation }) {
   /**
    * Add Users in Firebase 
    */
-  const AddData = () => {
+  const AddData = async() => {
     console.log(username, email, password)
     if(!username || !email || !password){
       Alert.alert('Wrong Input!', 'Username , Email or password field cannot be empty.', [
@@ -34,6 +35,7 @@ function AddUser({ navigation }) {
     }
     else{
       setLoader(true)
+      let token = await AsyncStorage.getItem('fcmToken');
     firebase.auth().createUserWithEmailAndPassword(email, password)
       .then((res) => {
         console.log("Response before Database:", res)
@@ -43,7 +45,8 @@ function AddUser({ navigation }) {
           password: password,
           email: email,
           isOnline: false,
-          profilePic: ''
+          profilePic: '',
+          fcmToken:token
 
         })
         navigation.navigate('Login')

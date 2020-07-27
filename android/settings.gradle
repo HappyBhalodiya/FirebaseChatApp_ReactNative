@@ -1,4 +1,4 @@
-rootProject.name = 'firebase_chatapp'
+rootProject.name = 'firebase_chatapp'    
 include ':react-native-view-shot'
 project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-view-shot/android')
 include ':react-native-vector-icons'

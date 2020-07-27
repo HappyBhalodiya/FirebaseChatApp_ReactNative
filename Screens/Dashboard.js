@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, PermissionsAndroid, ImageBackground, ScrollView, Image, TextInput } from 'react-native'
+import {
+    View,
+    Text,
+    DeviceEventEmitter,
+    TouchableOpacity,
+    StyleSheet,
+    Modal,
+    ScrollView,
+    Image,
+    TextInput
+} from 'react-native'
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-simple-toast";
 import firebase from '../database/firebaseDb';
@@ -63,25 +73,29 @@ function Dashboard({ route, navigation }) {
      * get All Massages from Firebase
      */
     const getAllMassages = async () => {
-      console.log("call massages")
+        console.log("call massages")
+
+        DeviceEventEmitter.addListener("ConnectionSuccessful", (data) => {
+            console.log("Connection successful", data);
+        });
         userid = await AsyncStorage.getItem('userid');
-           firebase.database().ref('/channel_data/-MAp3hJF8j8jxLwPChfp/' ).on('value' ,resp => {
-                var channel_massages = [];
-                resp.forEach(child => {
-                    channel_massages.push({
-                        massage: child.val().massage,
-                        receiverId: child.val().receiverId,
-                        senderId: child.val().senderId,
-                        date: child.val().date,
-                        massage_type: child.val().massage_type,
-                        fileName: child.val().fileName,
-                        senderProfile: child.val().senderProfile,
-                        senderName: child.val().senderName
-                    })
+        firebase.database().ref('/channel_data/-MAp3hJF8j8jxLwPChfp/').on('value', resp => {
+            var channel_massages = [];
+            resp.forEach(child => {
+                channel_massages.push({
+                    massage: child.val().massage,
+                    receiverId: child.val().receiverId,
+                    senderId: child.val().senderId,
+                    date: child.val().date,
+                    massage_type: child.val().massage_type,
+                    fileName: child.val().fileName,
+                    senderProfile: child.val().senderProfile,
+                    senderName: child.val().senderName
                 })
-                setchannelMassages(channel_massages);
             })
-        
+            setchannelMassages(channel_massages);
+        })
+
         var currentUserData = firebase.database().ref('/users/' + userid);
         currentUserData.once('value').then(snapshot => {
             setcurrentUserProfile(snapshot.val().profilePic)
@@ -98,7 +112,7 @@ function Dashboard({ route, navigation }) {
             })
             setAllUSerName(item)
         })
-      
+
     }
 
     /**
@@ -113,7 +127,7 @@ function Dashboard({ route, navigation }) {
         let date = new Date();
         let formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
         console.log("formattedDate", formattedDate)
-        let joinData = firebase.database().ref('channel_data/-MAp3hJF8j8jxLwPChfp' ).push();
+        let joinData = firebase.database().ref('channel_data/-MAp3hJF8j8jxLwPChfp').push();
         joinData.set({
             massage: massages,
             receiverId: '-MAp3hJF8j8jxLwPChfp',
@@ -261,144 +275,141 @@ function Dashboard({ route, navigation }) {
     const renderAllMassages = channelMassages.map((massage, index) => {
 
         let changeDateFormate = moment(massage.date).format('h:mm a')
-        
-            if (massage.massage_type == 'image') {
-                return (
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-                        <View style={{ flexDirection: 'column', flex: 1 }}>
-                            <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
-                        </View>
-                        <View style={{ flexDirection: 'column', flex: 7 }}>
-                            <Text style={styles.sendername}>{massage.senderName}</Text>
-                            <View style={styles.sendfile} >
-                                <TouchableOpacity onPress={() => showImg(massage.massage)}>
-                                    <Image source={{ uri: massage.massage }}
-                                        style={{ width: 250, height: 250 }} />
-                                </TouchableOpacity>
-                                <Text style={styles.sendertime}>{changeDateFormate}</Text>
+
+        if (massage.massage_type == 'image') {
+            return (
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                    <View style={{ flexDirection: 'column', flex: 1 }}>
+                        <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', flex: 7 }}>
+                        <Text style={styles.sendername}>{massage.senderName}</Text>
+                        <View style={styles.sendfile} >
+                            <TouchableOpacity onPress={() => showImg(massage.massage)}>
+                                <Image source={{ uri: massage.massage }}
+                                    style={{ width: 250, height: 250 }} />
+                            </TouchableOpacity>
+                            <Text style={styles.sendertime}>{changeDateFormate}</Text>
 
 
-                            </View>
                         </View>
-                        <Modal
-                            animationType="fade"
-                            transparent={false}
-                            visible={visible}
-                            onRequestClose={() => {
-                            }}>
+                    </View>
+                    <Modal
+                        animationType="fade"
+                        transparent={false}
+                        visible={visible}
+                        onRequestClose={() => {
+                        }}>
+                        <View >
                             <View >
-                                <View >
-                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-                                        <TouchableOpacity onPress={() => setVisible(false)} >
-                                            <Icon name="close" color="grey" size={30} />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={{ elevation: 5, padding: 10 }}>
-                                        <Image source={{ uri: selectImage }} style={styles.selectImage} />
-                                    </View>
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
+                                    <TouchableOpacity onPress={() => setVisible(false)} >
+                                        <Icon name="close" color="grey" size={30} />
+                                    </TouchableOpacity>
                                 </View>
-                            </View>
-                        </Modal>
-
-                    </View>
-                )
-            } else if (massage.massage_type == 'application') {
-                return (
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-                        <View style={{ flexDirection: 'column', flex: 1 }}>
-                            <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
-                        </View>
-                        <View style={{ flexDirection: 'column', flex: 7 }}>
-                            <Text style={styles.sendername}>{massage.senderName}</Text>
-                            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
-                                <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
-                                    <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
-                                </View>
-                                <Text style={styles.sendertime}>{changeDateFormate}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )
-            }
-            else if (massage.massage_type == 'audio') {
-                return (
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-                        <View style={{ flexDirection: 'column', flex: 1 }}>
-                            <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
-                        </View>
-                        <View style={{ flexDirection: 'column', flex: 7 }}>
-                            <Text style={styles.sendername}>{massage.senderName}</Text>
-                            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
-                                <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
-                                    <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
-                                </View>
-                                <Text style={styles.sendertime}>{changeDateFormate}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )
-            }
-            else if (massage.massage_type == 'video') {
-                return (
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-                        <View style={{ flexDirection: 'column', flex: 1 }}>
-                            <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
-                        </View>
-                        <View style={{ flexDirection: 'column', flex: 7 }}>
-                            <Text style={styles.sendername}>{massage.senderName}</Text>
-                            <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
-                                <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
-                                    <VideoPlayer
-                                        source={{ uri: massage.massage }}
-                                        disableFullscreen={true}
-                                        disableBack={true}
-                                        disableVolume={true}
-                                        paused={true}
-                                        disableSeekbar={false}
-                                    />
-                                </View>
-                                <Text style={styles.sendertime}>{changeDateFormate}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )
-            }
-            else {
-                return (
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
-                        <View style={{ flexDirection: 'column', flex: 1 }}>
-                            <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
-                        </View>
-                        <View style={{ flexDirection: 'column', flex: 7 }}>
-                            <Text style={styles.sendername}>{massage.senderName}</Text>
-                            <View style={styles.sendermsg}>
-                                <ParsedText
-                                    style={{ marginRight: 50, fontSize: 16 }}
-                                    parse={
-                                        [
-                                            { pattern: /@(\w+)/, style: { color: 'blue', marginRight: 50, fontSize: 16 } },
-                                        ]
-                                    }
-                                    childrenProps={{ allowFontScaling: false }}
-                                >
-                                    {massage.massage}
-                                </ParsedText>
-                                {/* <Text style={ { color: 'blue', marginRight: 50, fontSize: 16 } : { marginRight: 50, fontSize: 16 }}>{massage.massage}</Text> */}
-                                <View style={{ flexDirection: 'row' }}>
-                                    <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                                <View style={{ elevation: 5, padding: 10 }}>
+                                    <Image source={{ uri: selectImage }} style={styles.selectImage} />
                                 </View>
                             </View>
                         </View>
+                    </Modal>
+
+                </View>
+            )
+        } else if (massage.massage_type == 'application') {
+            return (
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                    <View style={{ flexDirection: 'column', flex: 1 }}>
+                        <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
                     </View>
+                    <View style={{ flexDirection: 'column', flex: 7 }}>
+                        <Text style={styles.sendername}>{massage.senderName}</Text>
+                        <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+                            <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
+                                <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
+                            </View>
+                            <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )
+        }
+        else if (massage.massage_type == 'audio') {
+            return (
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                    <View style={{ flexDirection: 'column', flex: 1 }}>
+                        <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', flex: 7 }}>
+                        <Text style={styles.sendername}>{massage.senderName}</Text>
+                        <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+                            <View style={{ backgroundColor: 'white', flexDirection: 'row', padding: 5 }}>
+                                <Text key={chatMessage} style={styles.pdfText}>{massage.fileName}</Text>
+                            </View>
+                            <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )
+        }
+        else if (massage.massage_type == 'video') {
+            return (
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                    <View style={{ flexDirection: 'column', flex: 1 }}>
+                        <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', flex: 7 }}>
+                        <Text style={styles.sendername}>{massage.senderName}</Text>
+                        <TouchableOpacity style={styles.sendfile} onLongPress={() => openallFiles(massage.massage, massage.fileName)}>
+                            <View style={{ flexDirection: 'row', padding: 5, height: 250, width: 250 }}>
+                                <VideoPlayer
+                                    source={{ uri: massage.massage }}
+                                    disableFullscreen={true}
+                                    disableBack={true}
+                                    disableVolume={true}
+                                    paused={true}
+                                    disableSeekbar={false}
+                                />
+                            </View>
+                            <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )
+        }
+        else {
+            return (
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start' }}>
+                    <View style={{ flexDirection: 'column', flex: 1 }}>
+                        <Image style={styles.img} source={massage.senderProfile ? { uri: massage.senderProfile } : require('../assets/userpic.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', flex: 7 }}>
+                        <Text style={styles.sendername}>{massage.senderName}</Text>
+                        <View style={styles.sendermsg}>
+                            <ParsedText
+                                style={{ marginRight: 50, fontSize: 16 }}
+                                parse={
+                                    [
+                                        { pattern: /@(\w+)/, style: { color: 'blue', marginRight: 50, fontSize: 16 } },
+                                    ]
+                                }
+                                childrenProps={{ allowFontScaling: false }}
+                            >
+                                {massage.massage}
+                            </ParsedText>
+                            {/* <Text style={ { color: 'blue', marginRight: 50, fontSize: 16 } : { marginRight: 50, fontSize: 16 }}>{massage.massage}</Text> */}
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text style={styles.sendertime}>{changeDateFormate}</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
 
-                )
-            }
-        
-
-
+            )
+        }
     })
     const allusersrender = allUSerName.map(data => {
-        
+
         return (
             <TouchableOpacity style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e7e7e7' }} onPress={() => [chatMessage.length ? setChatMessage(chatMessage + data.username) : setChatMessage(data.username), isMention = false]}>
                 <Image style={{ width: 35, height: 35, margin: 10, borderRadius: 360 }} source={data.userProfilepic ? { uri: data.userProfilepic } : require('../assets/userpic.png')}></Image>
