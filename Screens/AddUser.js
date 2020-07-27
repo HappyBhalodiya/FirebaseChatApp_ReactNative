@@ -37,7 +37,7 @@ function AddUser({ navigation }) {
       setLoader(true)
       let token = await AsyncStorage.getItem('fcmToken');
     firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then((res) => {
+      .then(async(res) => {
         console.log("Response before Database:", res)
         firebase.database().ref('users/' + res.user.uid).set({
           id: res.user.uid,
@@ -47,10 +47,10 @@ function AddUser({ navigation }) {
           isOnline: false,
           profilePic: '',
           fcmToken:token
-
         })
         navigation.navigate('Login')
         setLoader(false)
+        await AsyncStorage.setItem('username',username);
       })
     }
   }

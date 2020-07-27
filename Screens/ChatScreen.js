@@ -32,7 +32,7 @@ const NavigationDrawerStructure = (props) => {
 }
 let userid;
 let messageDateString;
-
+let userName;
 function ChatScreen({ route, navigation }) {
   const [chatMessage, setChatMessage] = useState('')
   const [allChats, setallChats] = useState([])
@@ -47,6 +47,7 @@ function ChatScreen({ route, navigation }) {
   const scrollViewRef = useRef();
   const [currentUserProfile, setcurrentUserProfile] = useState('')
   const [token, setToken] = useState('')
+  
 
   const Blob = RNFetchBlob.polyfill.Blob;
   const fs = RNFetchBlob.fs;
@@ -114,6 +115,8 @@ function ChatScreen({ route, navigation }) {
    */
   const getAllMassages = async () => {
     userid = await AsyncStorage.getItem('userid');
+   userName =  await AsyncStorage.getItem('username');
+    
     var currentUserData = firebase.database().ref('/users/' + userid);
     currentUserData.once('value').then(snapshot => {
       setcurrentUserProfile(snapshot.val().profilePic)
@@ -167,18 +170,18 @@ function ChatScreen({ route, navigation }) {
       isRead: false,
     });
 
-    console.log("token====",token)
+    console.log("token====",token,userName)
     const data = {
       'to': token,
       'notification': {
         'body': massages,
-        'title': "React Native Firebase",
+        'title': userName,
         'content_available': true,
         'priority': "high"
       },
       'data': {
         'body': massages,
-        'title': "React Native Firebase",
+        'title': userName,
         'content_available': true,
         'priority': "high"
       }
@@ -191,7 +194,7 @@ function ChatScreen({ route, navigation }) {
       }
     })
       .then((response) => {
-        console.log(">>>>>>>>>>>>>>>>>>>>>>>",response)
+        console.log("success")
       })
       .catch((error) => {
         console.log("Error::::::::::::::::::::::::;",error)
