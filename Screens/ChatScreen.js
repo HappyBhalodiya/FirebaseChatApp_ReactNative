@@ -142,9 +142,7 @@ function ChatScreen({ route, navigation }) {
         })
       })
       setallChats(massages)
-
     })
-
   }
 
   /**
@@ -169,7 +167,7 @@ function ChatScreen({ route, navigation }) {
       fileName: fileName,
       isRead: false,
     });
-
+// for send notification
     console.log("token====",token,userName)
     const data = {
       'to': token,

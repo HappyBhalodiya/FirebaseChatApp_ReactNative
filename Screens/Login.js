@@ -16,8 +16,6 @@ import firebase from '../database/firebaseDb';
 import { AuthContext } from '../components/context';
 import * as Animatable from 'react-native-animatable';
 
-
-
 function Login({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('')
@@ -28,6 +26,7 @@ function Login({ navigation }) {
      * Login user
      */
     const login = async () => {
+        let token = await AsyncStorage.getItem('fcmToken');
         if (!email || !password) {
             Alert.alert('Wrong Input!', ' Email or password field cannot be empty.', [
                 { text: 'Okay' }
@@ -41,11 +40,17 @@ function Login({ navigation }) {
                     .signInWithEmailAndPassword(email, password)
                     .then(async (res) => {
                         console.log("Login Done", res);
+                        var currenuserName = firebase.database().ref('/users/' +  res.user.uid);
+                        currenuserName.once('value').then(async(snapshot) => {
+                            await AsyncStorage.setItem('username',snapshot.val().username);     
+                        })
                         await AsyncStorage.setItem('userid', res.user.uid)
                         const foundUser = {
                             user: res.user.email,
                             token: res.user.uid
                         }
+                        console.log("token:in login", token)
+                        firebase.database().ref('users/').child(res.user.uid).update({ 'fcmToken': token })
                         signIn(foundUser);
                         setEmail('')
                         setPassword('')
@@ -205,3 +210,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     }
 });
+
+
+// I have no client projects in the git directory.
+// All live projects are in Drive and i already gave all links to vivek

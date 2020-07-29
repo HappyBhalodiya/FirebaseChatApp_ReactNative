@@ -36,6 +36,7 @@ let userid;
 let messageDateString;
 let isMention;
 let channelkey;
+let userName;
 function ChannelChatScreen({ route, navigation }) {
     const [chatMessage, setChatMessage] = useState('')
     const [showButtons, setShowButtons] = useState(false)
@@ -49,7 +50,8 @@ function ChannelChatScreen({ route, navigation }) {
     const [channelMassages, setchannelMassages] = useState([])
     const scrollViewRef = useRef();
     const [allUSerName, setAllUSerName] = useState([])
-    const [oldUserName, setoldUserName ] = useState([])
+    const [oldUserName, setoldUserName] = useState([])
+    const [usersToken, setUsersToken] = useState([])
 
     const Blob = RNFetchBlob.polyfill.Blob;
     const fs = RNFetchBlob.fs;
@@ -66,9 +68,10 @@ function ChannelChatScreen({ route, navigation }) {
      */
     const getAllMassages = async () => {
         userid = await AsyncStorage.getItem('userid');
+        userName =  await AsyncStorage.getItem('username');
         channelkey = EventRegister.addEventListener('updateChannel', (userclickedid) => {
-            console.log("click id======",userclickedid)
-             firebase.database().ref('/channel_data/' + userclickedid).on('value' , resp => {
+            console.log("click id======", userclickedid)
+            firebase.database().ref('/channel_data/' + userclickedid).on('value', resp => {
                 var channel_massages = [];
                 resp.forEach(child => {
                     channel_massages.push({
@@ -93,12 +96,18 @@ function ChannelChatScreen({ route, navigation }) {
         var allUser = firebase.database().ref('/users/');
         allUser.once('value').then(snapshot => {
             var item = [];
+            var tokens = []
             snapshot.forEach(child => {
                 item.push({
                     username: child.val().username.replace(/\s/g, ''),
                     userProfilepic: child.val().profilePic
                 })
             })
+
+            snapshot.forEach(child => {
+                tokens.push(child.val().fcmToken)
+            })
+            setUsersToken(tokens)
             setAllUSerName(item)
             setoldUserName(item)
         })
@@ -128,6 +137,38 @@ function ChannelChatScreen({ route, navigation }) {
             senderProfile: currentUserProfile,
             senderName: currentUserName
         });
+
+
+        console.log("token====", usersToken)
+        const data = {
+            'to': usersToken,
+            'notification': {
+                'body': massages,
+                'title': userName,
+                'content_available': true,
+                'priority': "high"
+            },
+            'data': {
+                'body': massages,
+                'title': userName,
+                'content_available': true,
+                'priority': "high"
+            }
+        };
+        let url = 'https://fcm.googleapis.com/fcm/send'
+        axios.post(url, data, {
+            headers: {
+                'Authorization': "key=" + 'AAAArUxcL_Q:APA91bFcAl3t_F-8Jje-YBt5Nqm3mb-a2seCEgGIxQHtL3tloRrYBt-1sErkTljzbzeLN0TGys4giwdmIfMtPaXYgTbAk5jWDYczEoM9Qxod4XnZM6OI4brkpIzkt7kgrvuFPAZIp6gB',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then((response) => {
+                console.log("success")
+            })
+            .catch((error) => {
+                console.log("Error::::::::::::::::::::::::;", error)
+            })
+
         getAllMassages()
         setChatMessage('')
         setLoader(false)
@@ -388,7 +429,7 @@ function ChannelChatScreen({ route, navigation }) {
                                 >
                                     {massage.massage}
                                 </ParsedText>
-                                
+
                                 <View style={{ flexDirection: 'row' }}>
                                     <Text style={styles.sendertime}>{changeDateFormate}</Text>
                                 </View>
@@ -403,7 +444,7 @@ function ChannelChatScreen({ route, navigation }) {
 
     })
     const allusersrender = allUSerName.map(data => {
-        
+
         return (
             <TouchableOpacity style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e7e7e7' }} onPress={() => [chatMessage.length ? setChatMessage(chatMessage + data.username) : setChatMessage(data.username), isMention = false]}>
                 <Image style={{ width: 35, height: 35, margin: 10, borderRadius: 360 }} source={data.userProfilepic ? { uri: data.userProfilepic } : require('../assets/userpic.png')}></Image>
@@ -412,12 +453,12 @@ function ChannelChatScreen({ route, navigation }) {
         )
     })
     const checkMention = (chatMessage) => {
-        
-       
+
+
         let char = chatMessage.charAt(chatMessage.length - 1);
         if (char == '@') {
             isMention = true;
-        } 
+        }
     }
     return (
         <View style={styles.container}>

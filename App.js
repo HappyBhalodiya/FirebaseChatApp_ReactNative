@@ -8,11 +8,11 @@ import Profile from "./Screens/Profile"
 import AsyncStorage from '@react-native-community/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { DrawerContent } from './Screens/DrawerContent';
-// import firebase from './database/firebaseDb';
+import firebase from './database/firebaseDb';
 import RootStackScreen from './Screens/RootStackScreen';
 import { AuthContext } from './components/context';
 import ChannelChatScreen from './Screens/ChannelChatScreen'
-import firebase  from 'react-native-firebase';
+import firebasee  from 'react-native-firebase';
 console.disableYellowBox = true;
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -79,6 +79,7 @@ const App = () => {
 				var presenceRef = firebase.database().ref("users/").child(userid);
 				// Write a string when this client loses connection
 				presenceRef.update({ 'isOnline': false });
+				firebase.database().ref('users/').child(userid).update({ 'fcmToken': '' })
 			} catch (e) {
 				console.log(e);
 			}
@@ -104,7 +105,7 @@ const App = () => {
 
 
 	const checkPermission = async () => {
-		const enabled = await firebase.messaging().hasPermission();
+		const enabled = await firebasee.messaging().hasPermission();
 		// If Premission granted proceed towards token fetch
 		if (enabled) {
 			getToken();
@@ -117,7 +118,7 @@ const App = () => {
 		let fcmToken = await AsyncStorage.getItem('fcmToken');
 		console.log("token====================",fcmToken)
 		if (!fcmToken) {
-		  fcmToken = await firebase.messaging().getToken();
+		  fcmToken = await firebasee.messaging().getToken();
 		  if (fcmToken) {
 			// user has a device token
 			await AsyncStorage.setItem('fcmToken', fcmToken);
@@ -127,7 +128,7 @@ const App = () => {
 	
 	   const requestPermission = async() => {
 		try {
-		  await firebase.messaging().requestPermission();
+		  await firebasee.messaging().requestPermission();
 		  // User has authorised
 		  getToken();
 		} catch (error) {
@@ -139,12 +140,12 @@ const App = () => {
 	const createNotificationListeners = async () => {
 		console.log("calllllllllllllllllll")	
 		// This listener triggered when notification has been received in foreground
-		 notificationListener = firebase.notifications().onNotification((notification) => {
+		 notificationListener = firebasee.notifications().onNotification((notification) => {
 			console.log(">>>>>>>>>>>>>>>>>>>>>>>>>",notification)
 			const { title, body } = notification;
 
-			const localNotification = new firebase.notifications.Notification({
-				// sound: 'sampleaudio',
+			const localNotification = new firebasee.notifications.Notification({
+				sound: 'sampleaudio',
 				show_in_foreground: true,
 			  }) 
 			  .setNotificationId(notification.notificationId)
@@ -155,21 +156,22 @@ const App = () => {
 			  .android.setChannelId('fcm_FirebaseNotifiction_default_channel') // e.g. the id you chose above
 			  .android.setSmallIcon('https://www.gettyimages.in/gi-resources/images/500px/983794168.jpg') // create this icon in Android Studio
 			  .android.setColor('#000000') // you can set a color here
-			  .android.setPriority(firebase.notifications.Android.Priority.High);
+			  .android.setPriority(firebasee.notifications.Android.Priority.High);
 
-			  const action = new firebase.notifications.Android.Action('action', 'ic_launcher', 'Visit Profile', () => {
+			  const action = new firebasee.notifications.Android.Action('action', 'ic_launcher', 'Visit Profile', () => {
 				console.log("Add event in addaction=====================>")
 			  });
+			  
 			  // Add the action to the notification
 			  localNotification.android.addAction(action);
-			  firebase.notifications()
+			  firebasee.notifications()
 				.displayNotification(localNotification)
 				.catch(err => console.error('err===============>', err));
 			
 	  
 		});
 
-		notificationOpenedListener = firebase.notifications().onNotificationOpened((notificationOpen) => {
+		notificationOpenedListener = firebasee.notifications().onNotificationOpened((notificationOpen) => {
 			const { title, body } = notificationOpen.notification;
 			console.log("notification",notificationOpen)
 			
